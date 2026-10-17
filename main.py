@@ -12,6 +12,9 @@ def send_telegram(msg):
     requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"})
 
 def run_agent():
+    send_telegram("🤖 Tes koneksi: Bot AI News Aktif!") # <--- TAMBAHIN INI
+    print("Memulai Analisa Macro Quant...")
+    # ... (kode di bawahnya biarin aja) ...
     print("Memulai Analisa Macro Quant...")
     main_event, supporting_data = get_news_and_cluster()
     
