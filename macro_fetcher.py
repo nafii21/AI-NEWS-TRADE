@@ -1,6 +1,6 @@
 import requests
 import yfinance as yf
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 def get_ff_calendar():
     url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
@@ -11,9 +11,30 @@ def get_ff_calendar():
 
 def get_news_and_cluster():
     calendar = get_ff_calendar()
-    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
-    today_news = [n for n in calendar if n['date'].startswith(today_str) and n['country'] == 'USD']
+    # Pakai zona waktu WIB (UTC+7)
+    wib_tz = timezone(timedelta(hours=7))
+    today_wib_str = datetime.now(wib_tz).strftime("%Y-%m-%d")
+    
+    today_news = []
+    for n in calendar:
+        if n['country'] != 'USD': continue
+        
+        try:
+            # Forex Factory ngasih format ISO 8601 (misal: 2024-05-03T08:30:00-04:00)
+            dt_str = n['date']
+            dt_obj = datetime.fromisoformat(dt_str)
+            
+            # Konversi ke WIB
+            dt_wib = dt_obj.astimezone(wib_tz)
+            
+            # Cek apakah tanggal rilis (dalam WIB) sama dengan hari ini
+            if dt_wib.strftime("%Y-%m-%d") == today_wib_str:
+                n['wib_time'] = dt_wib.strftime("%H:%M") # Simpan jam WIB
+                today_news.append(n)
+        except:
+            continue
+
     main_news = [n for n in today_news if n['impact'] == 'High']
     
     if not main_news:
