@@ -12,16 +12,13 @@ def send_telegram(msg):
     requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"})
 
 def run_agent():
-    send_telegram("🤖 Tes koneksi: Bot AI News Aktif!") # <--- TAMBAHIN INI
-    print("Memulai Analisa Macro Quant...")
-    # ... (kode di bawahnya biarin aja) ...
     print("Memulai Analisa Macro Quant...")
     main_event, supporting_data = get_news_and_cluster()
     
+    # 1. KALAU GAK ADA BERITA, KIRIM STATUS KE TELEGRAM
     if not main_event:
         print("Tidak ada berita High Impact USD hari ini (WIB).")
-        # Hapus tanda pagar di bawah kalau lu mau bot selalu lapor meski gak ada berita
-        # send_telegram("🔍 *Status Bot:* Hari ini tidak ada berita High Impact USD.")
+        send_telegram("🔍 *Hasil Pengecekan:*\nHari ini tidak ada berita High Impact USD di Forex Factory. Belum ada sinyal untuk XAUUSD.")
         return
 
     market_context = get_market_context()
@@ -35,8 +32,8 @@ def run_agent():
     
     decision = get_ai_decision(main_event['title'], quant_context, market_context['dxy_change_pct'])
     
+    # 2. KALAU ADA BERITA & AI NGASIH SINYAL
     if decision:
-        # Di sini kita panggil main_event['wib_time']
         msg = f"""
 🌍 *MACRO QUANT PREDICTION*
 📅 Event: {main_event['title']}
