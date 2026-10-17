@@ -35,26 +35,28 @@ def get_price_at_time(ticker, target_dt, offset_minutes):
     if df.empty:
         return None
     
+    # --- PERBAIKAN MULTI-INDEX DARI YFINANCE ---
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+    # -------------------------------------------
+
     target_time = target_dt + timedelta(minutes=offset_minutes)
     
-    # --- PERBAIKAN TIMEZONE DISINI ---
     if df.index.tz is not None:
-        # Kalau dataframe punya timezone (misal New York), ubah target_time ke timezone tersebut
         target_time = target_time.astimezone(df.index.tz)
     else:
-        # Kalau dataframe polos, buang timezone dari target_time
         target_time = target_time.replace(tzinfo=None)
-    # ---------------------------------
 
     closest_idx = df.index.get_indexer([target_time], method='nearest')[0]
-    return float(df['Close'].iloc[closest_idx])
+    
+    # Pastikan ngambil nilai scalar (float)
+    val = df['Close'].iloc[closest_idx]
+    return float(val) if not isinstance(val, pd.Series) else float(val.iloc[0])
 
 def run_backtest():
     print(f"=== MENGUJI SKENARIO: {NEWS_TITLE} ({NEWS_DATE_UTC} UTC) ===")
     
-    # --- PERBAIKAN TIMEZONE DISINI: Set sebagai UTC ---
     news_dt = datetime.strptime(NEWS_DATE_UTC, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-    # --------------------------------------------------
     
     price_before = get_price_at_time("GC=F", news_dt, -5)
     price_after = get_price_at_time("GC=F", news_dt, 30)
