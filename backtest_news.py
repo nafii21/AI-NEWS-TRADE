@@ -8,20 +8,24 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# INPUT SKENARIO HISTORIS (CPI 14 OKTOBER 2026)
+# INPUT SKENARIO HISTORIS (NFP Rilis Awal Oktober 2026)
 # ====================================================
-NEWS_TITLE = "CPI m/m"
-FORECAST = 0.6
-PREVIOUS = 0.4
-NEWS_DATE_UTC = "2026-10-14 12:30:00" 
+NEWS_TITLE = "Non-Farm Employment Change"
+FORECAST = 90.0
+PREVIOUS = 21.0
+# Jam rilis: 2 Oktober 2026, 12:30 UTC (19:30 WIB)
+NEWS_DATE_UTC = "2026-10-02 12:30:00" 
 
+# Data pendukung historis
 SUPPORTING_DATA = {
-    "PPI m/m": {"forecast": 0.6, "previous": 0.4},
-    "Core CPI m/m": {"forecast": 0.2, "previous": 0.3}
+    "ADP Non-Farm Employment Change": {"forecast": 70.0, "previous": 36.0},
+    "Unemployment Rate": {"forecast": 4.1, "previous": 4.1},
+    "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3}
 }
 
-DXY_CHANGE_PCT = 0.35
-OIL_CHANGE_PCT = 5.0
+# Konteks Market (Asumsi: DXY sempat melemah lalu menguat, Minyak stabil)
+DXY_CHANGE_PCT = -0.15 
+OIL_CHANGE_PCT = 0.5  
 # ====================================================
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -64,7 +68,7 @@ def get_price_at_time(ticker, target_dt, offset_minutes):
 def run_backtest():
     try:
         print(f"=== MENGUJI SKENARIO: {NEWS_TITLE} ({NEWS_DATE_UTC} UTC) ===")
-        send_telegram(f"⏳ *Memulai Backtest:* {NEWS_TITLE}...\n_(Sedang menarik data, mohon tunggu 15-30 detik)_")
+        send_telegram(f"⏳ *Memulai Backtest NFP:*\n_(Sedang menarik data historis, mohon tunggu 15-30 detik)_")
         
         news_dt = datetime.strptime(NEWS_DATE_UTC, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
         
@@ -97,7 +101,7 @@ def run_backtest():
         status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
         
         msg = f"""
-🧪 *HASIL BACKTEST NEWS*
+🧪 *HASIL BACKTEST NFP*
 📅 Event: {NEWS_TITLE}
 
 📊 *Data Gold:*
