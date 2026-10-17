@@ -1,6 +1,8 @@
+```python
 import requests
 import os
 import json
+import re
 
 def get_ai_decision(news_title, quant_context, market_context):
     api_key = os.getenv("GROQ_API_KEY")
@@ -27,7 +29,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     Tugasmu:
     Gabungkan semua data di atas untuk memprediksi arah XAUUSD.
     
-    Output WAJIB JSON:
+    Output WAJIB berupa JSON valid TANPA teks tambahan, TANPA markdown block:
     {{
         "signal": "BUY / SELL / NO TRADE",
         "confidence": "High / Medium / Low",
@@ -45,7 +47,18 @@ def get_ai_decision(news_title, quant_context, market_context):
     
     try:
         resp = requests.post(url, json=payload, headers=headers, timeout=30).json()
-        return json.loads(resp["choices"][0]["message"]["content"])
+        
+        # --- TAMBAHAN: Ambil raw content
+        raw_content = resp["choices"][0]["message"]["content"]
+        
+        # --- TAMBAHAN: Bersihkan markdown backticks (```json ... ```) jika ada
+        clean_json = re.sub(r'```json\n?|```', '', raw_content).strip()
+        
+        return json.loads(clean_json)
+        
     except Exception as e:
-        print(f"AI Error: {e}")
+        # --- TAMBAHAN: Print error asli di log GitHub biar kita tau penyebabnya
+        print(f"RAW AI RESPONSE: {resp}")
+        print(f"AI Error Asli: {e}")
         return None
+```
