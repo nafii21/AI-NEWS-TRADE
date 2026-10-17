@@ -2,29 +2,36 @@ import requests
 import os
 import json
 
-def get_ai_decision(news_title, quant_context, dxy_change):
+def get_ai_decision(news_title, quant_context, market_context):
     api_key = os.getenv("GROQ_API_KEY")
     url = "https://api.groq.com/openai/v1/chat/completions"
     
     prompt = f"""
-    Kamu adalah Macro Quant Trader Institusi.
-    Kita akan menganalisa arah XAUUSD sebelum rilis berita: {news_title}.
+    Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD.
+    Hari ini ada rilis berita utama: {news_title}.
     
-    [RUMUS MATEMATIKA QUANT - NEWS SURPRISE SCORE]
-    Score Utama (Forecast vs Previous): {quant_context['main_surprise_score']}
-    Skor Data Pendukung: {json.dumps(quant_context['supporting_analysis'], indent=2)}
-    Konteks DXY hari ini: {dxy_change}%
+    [DATA KUANTITATIF]
+    - Surprise Score Utama (S_t): {quant_context['main_surprise_score']}
+    - Skor Data Pendukung: {json.dumps(quant_context['supporting_analysis'], indent=2)}
+    
+    [KONDISI MARKET SAAT INI]
+    - Perubahan DXY hari ini: {market_context['dxy_change_pct']}%
+    - Perubahan Harga Minyak 5 Hari: {market_context['oil_change_5d_pct']}%
+    
+    [ATURAN ANALISA]
+    1. NFP: Cross-check dengan ADP/Jobless Claims. Jika NFP ekspektasi tinggi tapi ADP rendah, bisa jadi NFP meleset (Dovish -> BUY Gold).
+    2. CPI: Cross-check dengan harga minyak (oil). Jika minyak naik 5 hari terakhir, ekspektasi inflasi (CPI) naik -> Hawkish (USD Kuat) -> SELL Gold.
+    3. FOMC: Jika data pendukung (GDP/NFP) kuat, Fed cenderung Hawkish -> SELL Gold. Jika data campur aduk, NO TRADE.
+    4. DXY: Jika DXY sedang naik kuat, ini konfirmasi USD kuat -> Tekanan ke Gold.
     
     Tugasmu:
-    1. Jika Score Utama POSITIF BESAR (> 1.0): Pasar ekspektasi data sangat bagus (Hawkish/Inflasi tinggi). USD menguat -> XAUUSD berpotensi TURUN (SELL).
-    2. Jika Score Utama NEGATIF BESAR (< -1.0): Pasar ekspektasi data sangat buruk (Dovish). USD melemah -> XAUUSD berpotensi NAIK (BUY).
-    3. CROSS-CHECK dengan Data Pendukung! Jika Score Utama Positif, TAPI skor ADP negatif, berarti ekspektasi bisa meleset. Waspada (NO TRADE / Low Confidence).
+    Gabungkan semua data di atas untuk memprediksi arah XAUUSD.
     
     Output WAJIB JSON:
     {{
         "signal": "BUY / SELL / NO TRADE",
         "confidence": "High / Medium / Low",
-        "math_explanation": "Jelaskan logika arah harga berdasarkan rumus S_t di atas",
+        "math_explanation": "Jelaskan korelasi angka S_t dengan data pendukung & market",
         "trade_plan": "Aksi untuk XAUUSD"
     }}
     """
