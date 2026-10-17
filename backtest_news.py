@@ -8,11 +8,11 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# INPUT SKENARIO HISTORIS (NFP Rilis Awal Oktober 2026)
+# INPUT SKENARIO HISTORIS (NFP September 2026, Rilis 2 Okt 2026)
 # ====================================================
 NEWS_TITLE = "Non-Farm Employment Change"
 FORECAST = 90.0
-PREVIOUS = 21.0
+PREVIOUS = 133.0
 # Jam rilis: 2 Oktober 2026, 12:30 UTC (19:30 WIB)
 NEWS_DATE_UTC = "2026-10-02 12:30:00" 
 
@@ -23,9 +23,9 @@ SUPPORTING_DATA = {
     "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3}
 }
 
-# Konteks Market (Asumsi: DXY sempat melemah lalu menguat, Minyak stabil)
-DXY_CHANGE_PCT = -0.15 
-OIL_CHANGE_PCT = 0.5  
+# Konteks Market (Asumsi: DXY melemah karena NFP jelek, Minyak netral)
+DXY_CHANGE_PCT = -0.40 
+OIL_CHANGE_PCT = 0.0  
 # ====================================================
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -68,7 +68,7 @@ def get_price_at_time(ticker, target_dt, offset_minutes):
 def run_backtest():
     try:
         print(f"=== MENGUJI SKENARIO: {NEWS_TITLE} ({NEWS_DATE_UTC} UTC) ===")
-        send_telegram(f"⏳ *Memulai Backtest NFP:*\n_(Sedang menarik data historis, mohon tunggu 15-30 detik)_")
+        send_telegram(f"⏳ *Memulai Backtest NFP Sep 2026:*\n_(Sedang menarik data historis, mohon tunggu 15-30 detik)_")
         
         news_dt = datetime.strptime(NEWS_DATE_UTC, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
         
@@ -101,7 +101,7 @@ def run_backtest():
         status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
         
         msg = f"""
-🧪 *HASIL BACKTEST NFP*
+🧪 *HASIL BACKTEST NFP SEP 2026*
 📅 Event: {NEWS_TITLE}
 
 📊 *Data Gold:*
