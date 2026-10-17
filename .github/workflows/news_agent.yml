@@ -1,11 +1,7 @@
 name: XAU Quant News Agent
 
 on:
-  schedule:
-    # Jalan tiap 15 menit, Senin-Jumat
-    # (Bot bakal ngecek kalender, kalau gak ada news dia langsung tidur)
-    - cron: '*/15 * * * 1-5'
-  workflow_dispatch: # Biar lu bisa klik "Run" manual buat ngetes
+  workflow_dispatch: # Cuma jalan kalau lu klik manual
 
 jobs:
   run-agent:
