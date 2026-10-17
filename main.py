@@ -15,7 +15,6 @@ def run_agent():
     print("Memulai Analisa Macro Quant...")
     main_event, supporting_data = get_news_and_cluster()
     
-    # 1. KALAU GAK ADA BERITA, KIRIM STATUS KE TELEGRAM
     if not main_event:
         print("Tidak ada berita High Impact USD hari ini (WIB).")
         send_telegram("🔍 *Hasil Pengecekan:*\nHari ini tidak ada berita High Impact USD di Forex Factory. Belum ada sinyal untuk XAUUSD.")
@@ -30,10 +29,10 @@ def run_agent():
         supporting_data
     )
     
-    decision = get_ai_decision(main_event['title'], quant_context, market_context['dxy_change_pct'])
+    decision = get_ai_decision(main_event['title'], quant_context, market_context)
     
-    # 2. KALAU ADA BERITA & AI NGASIH SINYAL
     if decision:
+        # Nampilin data DXY & Minyak di Telegram
         msg = f"""
 🌍 *MACRO QUANT PREDICTION*
 📅 Event: {main_event['title']}
@@ -41,13 +40,16 @@ def run_agent():
 📊 Forecast: {main_event['forecast']} | Prev: {main_event['previous']}
 
 🧮 *Surprise Score (S_t): {quant_context['main_surprise_score']}*
-
 📉 *Skor Pendukung:*
 {chr(10).join([f"- {k}: {v}" for k, v in quant_context['supporting_analysis'].items()]) if quant_context['supporting_analysis'] else "- Tidak ada data pendukung"}
 
+🌍 *Market:*
+- DXY: {market_context['dxy_change_pct']}%
+- Minyak (5D): {market_context['oil_change_5d_pct']}%
+
 🎯 *PREDIKSI: {decision['signal']}*
 🔥 Confidence: {decision['confidence']}
-🧠 Logika Math: {decision['math_explanation']}
+🧠 Logika: {decision['math_explanation']}
 
 💡 *Saran Eksekusi:* {decision['trade_plan']}
 """
