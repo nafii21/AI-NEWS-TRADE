@@ -1,4 +1,3 @@
-```python
 import requests
 import os
 import json
@@ -45,20 +44,13 @@ def get_ai_decision(news_title, quant_context, market_context):
     }
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     
+    resp = None
     try:
         resp = requests.post(url, json=payload, headers=headers, timeout=30).json()
-        
-        # --- TAMBAHAN: Ambil raw content
         raw_content = resp["choices"][0]["message"]["content"]
-        
-        # --- TAMBAHAN: Bersihkan markdown backticks (```json ... ```) jika ada
         clean_json = re.sub(r'```json\n?|```', '', raw_content).strip()
-        
         return json.loads(clean_json)
-        
     except Exception as e:
-        # --- TAMBAHAN: Print error asli di log GitHub biar kita tau penyebabnya
         print(f"RAW AI RESPONSE: {resp}")
         print(f"AI Error Asli: {e}")
         return None
-```
