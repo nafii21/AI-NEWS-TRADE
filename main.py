@@ -1,0 +1,54 @@
+import os
+import requests
+from macro_fetcher import get_news_and_cluster, get_market_context
+from quant_engine import build_pre_news_quant
+from ai_decider import get_ai_decision
+
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+def send_telegram(msg):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"})
+
+def run_agent():
+    main_event, supporting_data = get_news_and_cluster()
+    if not main_event:
+        print("Tidak ada berita High Impact hari ini.")
+        return
+
+    market_context = get_market_context()
+    
+    # Hitung Quant pakai rumus
+    quant_context = build_pre_news_quant(
+        main_event['title'], 
+        main_event['forecast'], 
+        main_event['previous'], 
+        supporting_data
+    )
+    
+    decision = get_ai_decision(main_event['title'], quant_context, market_context['dxy_change_pct'])
+    
+    if decision:
+        msg = f"""
+🌍 *MACRO QUANT PREDICTION*
+📅 Event: {main_event['title']}
+📊 Forecast: {main_event['forecast']} | Prev: {main_event['previous']}
+
+🧮 *Surprise Score (S_t): {quant_context['main_surprise_score']}*
+(Standar Deviasi Historis)
+
+📉 *Skor Pendukung:*
+{chr(10).join([f"- {k}: {v}" for k, v in quant_context['supporting_analysis'].items()]) if quant_context['supporting_analysis'] else "- Tidak ada data pendukung"}
+
+🎯 *PREDIKSI: {decision['signal']}*
+🔥 Confidence: {decision['confidence']}
+🧠 Logika Math: {decision['math_explanation']}
+
+💡 *Saran Eksekusi:* {decision['trade_plan']}
+"""
+        send_telegram(msg)
+        print("Sinyal terkirim!")
+
+if __name__ == "__main__":
+    run_agent()
