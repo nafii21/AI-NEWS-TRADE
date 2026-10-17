@@ -38,7 +38,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     """
     
     payload = {
-        "model": "llama-3.3-70b-versatile",
+        "model": "llama-3.1-8b-instant",  # <--- GW GANTI KE MODEL YANG LEBIH STABIL
         "messages": [{"role": "user", "content": prompt}],
         "response_format": {"type": "json_object"}
     }
@@ -47,10 +47,14 @@ def get_ai_decision(news_title, quant_context, market_context):
     resp = None
     try:
         resp = requests.post(url, json=payload, headers=headers, timeout=30).json()
+        
+        # Kalau Groq ngembaliin error (misal API Key salah)
+        if "error" in resp:
+            return {"signal": "ERROR", "math_explanation": str(resp["error"]), "confidence": "-", "trade_plan": "-"}
+
         raw_content = resp["choices"][0]["message"]["content"]
         clean_json = re.sub(r'```json\n?|```', '', raw_content).strip()
         return json.loads(clean_json)
+        
     except Exception as e:
-        print(f"RAW AI RESPONSE: {resp}")
-        print(f"AI Error Asli: {e}")
-        return None
+        return {"signal": "ERROR", "math_explanation": f"Gagal parsing: {e}. Raw: {resp}", "confidence": "-", "trade_plan": "-"}
