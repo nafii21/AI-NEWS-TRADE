@@ -8,23 +8,25 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# INPUT SKENARIO HISTORIS (CPI September 2026, Rilis 14 Okt 2026)
+# INPUT SKENARIO HISTORIS (FOMC 16 September 2026)
 # ====================================================
-NEWS_TITLE = "CPI m/m"
-FORECAST = 0.6
-PREVIOUS = 0.4
-# Jam rilis: 14 Oktober 2026, 12:30 UTC (19:30 WIB)
-NEWS_DATE_UTC = "2026-10-14 12:30:00" 
+NEWS_TITLE = "FOMC Statement / Federal Funds Rate"
+FORECAST = 4.00
+PREVIOUS = 3.75
+# FOMC Statement biasanya rilis jam 18:00 UTC (01:00 WIB)
+NEWS_DATE_UTC = "2026-09-16 18:00:00" 
 
-# Data pendukung historis (Core CPI & PPI)
+# Data pendukung (NFP, GDP, Unemployment, Core PCE)
 SUPPORTING_DATA = {
-    "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
-    "PPI m/m": {"forecast": 0.6, "previous": 0.4}
+    "NFP (Aug 2026)": {"forecast": 42.0, "previous": 21.0},
+    "GDP 2026 Projection": {"forecast": 2.3, "previous": 2.2},
+    "Unemployment Rate": {"forecast": 4.1, "previous": 4.3},
+    "Core PCE Projection": {"forecast": 3.4, "previous": 3.3}
 }
 
-# Konteks Market (Asumsi: DXY melesat naik karena inflasi panas, Minyak naik karena geopolitik)
-DXY_CHANGE_PCT = 0.40 
-OIL_CHANGE_PCT = 5.0  
+# Konteks Market (DXY menguat, Minyak sedang panas)
+DXY_CHANGE_PCT = 0.55 
+OIL_CHANGE_PCT = 17.2  
 # ====================================================
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -67,7 +69,7 @@ def get_price_at_time(ticker, target_dt, offset_minutes):
 def run_backtest():
     try:
         print(f"=== MENGUJI SKENARIO: {NEWS_TITLE} ({NEWS_DATE_UTC} UTC) ===")
-        send_telegram(f"⏳ *Memulai Backtest CPI Sep 2026:*\n_(Sedang menarik data historis, mohon tunggu 15-30 detik)_")
+        send_telegram(f"⏳ *Memulai Backtest FOMC Sep 2026:*\n_(Sedang menarik data historis, mohon tunggu 15-30 detik)_")
         
         news_dt = datetime.strptime(NEWS_DATE_UTC, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
         
@@ -100,7 +102,7 @@ def run_backtest():
         status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
         
         msg = f"""
-🧪 *HASIL BACKTEST CPI SEP 2026*
+🧪 *HASIL BACKTEST FOMC SEP 2026*
 📅 Event: {NEWS_TITLE}
 
 📊 *Data Gold:*
