@@ -37,8 +37,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     }}
     """
     
-    # Daftar model yang dicoba berurutan (fallback)
-    models = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "llama-3.1-8b-instant"]
+    models = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
     
     for model_name in models:
         payload = {
@@ -49,9 +48,8 @@ def get_ai_decision(news_title, quant_context, market_context):
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         
         try:
-            resp = requests.post(url, json=payload, headers=headers, timeout=30).json()
+            resp = requests.post(url, json=payload, headers=headers, timeout=20).json()
             
-            # Jika model ini error (misal modelnotfound), coba model berikutnya
             if "error" in resp:
                 print(f"Model {model_name} gagal: {resp['error']}")
                 continue
@@ -64,5 +62,4 @@ def get_ai_decision(news_title, quant_context, market_context):
             print(f"Model {model_name} exception: {e}")
             continue
     
-    # Jika semua model gagal
-    return {"signal": "ERROR", "math_explanation": "Semua model Groq gagal diakses. Cek API Key atau limit.", "confidence": "-", "trade_plan": "-"}
+    return {"signal": "ERROR", "math_explanation": "Semua model Groq gagal diakses. Cek limit API atau koneksi.", "confidence": "-", "trade_plan": "-"}
