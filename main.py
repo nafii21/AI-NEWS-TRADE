@@ -12,14 +12,17 @@ def send_telegram(msg):
     requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"})
 
 def run_agent():
+    print("Memulai Analisa Macro Quant...")
     main_event, supporting_data = get_news_and_cluster()
+    
     if not main_event:
-        print("Tidak ada berita High Impact hari ini.")
+        print("Tidak ada berita High Impact USD hari ini (WIB).")
+        # Hapus tanda pagar di bawah kalau lu mau bot selalu lapor meski gak ada berita
+        # send_telegram("🔍 *Status Bot:* Hari ini tidak ada berita High Impact USD.")
         return
 
     market_context = get_market_context()
     
-    # Hitung Quant pakai rumus
     quant_context = build_pre_news_quant(
         main_event['title'], 
         main_event['forecast'], 
@@ -30,13 +33,14 @@ def run_agent():
     decision = get_ai_decision(main_event['title'], quant_context, market_context['dxy_change_pct'])
     
     if decision:
+        # Di sini kita panggil main_event['wib_time']
         msg = f"""
 🌍 *MACRO QUANT PREDICTION*
 📅 Event: {main_event['title']}
+⏰ Rilis: {main_event['wib_time']} WIB
 📊 Forecast: {main_event['forecast']} | Prev: {main_event['previous']}
 
 🧮 *Surprise Score (S_t): {quant_context['main_surprise_score']}*
-(Standar Deviasi Historis)
 
 📉 *Skor Pendukung:*
 {chr(10).join([f"- {k}: {v}" for k, v in quant_context['supporting_analysis'].items()]) if quant_context['supporting_analysis'] else "- Tidak ada data pendukung"}
@@ -48,7 +52,7 @@ def run_agent():
 💡 *Saran Eksekusi:* {decision['trade_plan']}
 """
         send_telegram(msg)
-        print("Sinyal terkirim!")
+        print(f"Sinyal {main_event['title']} terkirim!")
 
 if __name__ == "__main__":
     run_agent()
