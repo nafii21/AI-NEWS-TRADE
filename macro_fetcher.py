@@ -39,29 +39,38 @@ def get_news_and_cluster():
     main_event['previous'] = float(main_event.get('previous') or 0)
     
     supporting_data = {}
+    
+    # ====================================================
+    # LOGIKA CLUSTERING DATA PENDUKUNG (SUPER LENGKAP)
+    # ====================================================
     for news in today_news:
         title = news['title']
         f_val = float(news.get('forecast') or 0)
         p_val = float(news.get('previous') or 0)
         
-        # NFP: Cari ADP, Employment, Jobless
+        # 1. Klaster NFP (Tenaga Kerja)
         if "Non-Farm" in main_title or "NFP" in main_title:
-            if "ADP" in title or "Employment" in title or "Jobless" in title:
+            if any(k in title for k in ["ADP", "Employment", "Jobless", "Unemployment", "Average Hourly", "Earnings", "Wages"]):
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
-        # CPI: Cari PPI, Core, Wage, Average Hourly, Earnings
+        # 2. Klaster CPI (Inflasi)
         elif "CPI" in main_title or "Consumer Price" in main_title:
-            if "PPI" in title or "Core" in title or "Wage" in title or "Average Hourly" in title or "Earnings" in title:
+            if any(k in title for k in ["PPI", "Core", "Wage", "Average Hourly", "Earnings", "Employment Cost", "ISM"]):
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
-        # FOMC: Cari GDP, Retail Sales, Non-Farm
-        elif "FOMC" in main_title:
-            if "GDP" in title or "Retail Sales" in title or "Non-Farm" in title:
+        # 3. Klaster FOMC (Suku Bunga)
+        elif "FOMC" in main_title or "Federal Funds" in main_title:
+            if any(k in title for k in ["GDP", "Retail Sales", "Non-Farm", "PCE", "CPI", "PPI"]):
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
-        # GDP: Cari Trade Balance, Inventory
+        # 4. Klaster Retail Sales (Penjualan Ritel)
+        elif "Retail Sales" in main_title:
+            if any(k in title for k in ["Core Retail", "Consumer Confidence", "PPI"]):
+                supporting_data[title] = {"forecast": f_val, "previous": p_val}
+
+        # 5. Klaster GDP (Pertumbuhan Ekonomi)
         elif "GDP" in main_title:
-            if "Trade Balance" in title or "Inventory" in title:
+            if any(k in title for k in ["Trade Balance", "Inventory", "Retail Sales", "Prelim", "Final"]):
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
     return main_event, supporting_data
@@ -84,12 +93,8 @@ def get_market_context():
     oil_data = get_twelve_data_quote("WTI/USD")
     gold_data = get_twelve_data_quote("XAU/USD")
     
-    dxy_change = dxy_data["change_pct"] if dxy_data else 0.0
-    oil_change = oil_data["change_pct"] if oil_data else 0.0
-    gold_price = gold_data["price"] if gold_data else 0.0
-
     return {
-        "dxy_change_pct": dxy_change,
-        "oil_change_5d_pct": oil_change,
-        "gold_price": gold_price
+        "dxy_change_pct": dxy_data["change_pct"] if dxy_data else 0.0,
+        "oil_change_5d_pct": oil_data["change_pct"] if oil_data else 0.0,
+        "gold_price": gold_data["price"] if gold_data else 0.0
     }
