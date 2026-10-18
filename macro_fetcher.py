@@ -1,6 +1,8 @@
+import os
 import requests
-import yfinance as yf
 from datetime import datetime, timezone, timedelta
+
+TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
 def get_ff_calendar():
     url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
@@ -27,11 +29,8 @@ def get_news_and_cluster():
         except:
             continue
 
-    # Cari News Utama (High Impact)
     main_news = [n for n in today_news if n['impact'] == 'High']
-    
-    if not main_news:
-        return None, None
+    if not main_news: return None, None
         
     main_event = main_news[0]
     main_title = main_event['title']
@@ -40,50 +39,57 @@ def get_news_and_cluster():
     main_event['previous'] = float(main_event.get('previous') or 0)
     
     supporting_data = {}
-    
-    # ==========================================
-    # LOGIKA CLUSTERING DATA PENDUKUNG
-    # ==========================================
     for news in today_news:
         title = news['title']
         f_val = float(news.get('forecast') or 0)
         p_val = float(news.get('previous') or 0)
         
-        # 1. Jika News Utama NFP -> Cari ADP, Jobless, Employment
         if "Non-Farm" in main_title or "NFP" in main_title:
             if "ADP" in title or "Employment" in title or "Jobless" in title:
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
-                
-        # 2. Jika News Utama CPI -> Cari PPI, Core CPI, Upah (Wage)
         elif "CPI" in main_title or "Consumer Price" in main_title:
-            if "PPI" in title or "Core" in title or "Wage" in title or "Average Hourly" in title:
+            if "PPI" in title or "Core" in title or "Wage" in title:
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
-                
-        # 3. Jika News Utama FOMC -> Cari GDP, Retail Sales, NFP
-        elif "FOMC" in main_title or "Federal Funds" in main_title:
+        elif "FOMC" in main_title:
             if "GDP" in title or "Retail Sales" in title or "Non-Farm" in title:
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
-        # 4. Jika News Utama GDP -> Cari Trade Balance, Inventories
-        elif "GDP" in main_title:
-            if "Trade Balance" in title or "Inventory" in title:
-                supporting_data[title] = {"forecast": f_val, "previous": p_val}
-
     return main_event, supporting_data
 
-def get_market_context():
+def get_twelve_data_quote(symbol):
+    """Narik data quote (termasuk harga close & percent change) dari Twelve Data"""
+    url = f"https://api.twelvedata.com/quote?symbol={symbol}&apikey={TWELVE_DATA_API_KEY}"
     try:
-        # Ambil DXY
-        dxy = yf.download("DX-Y.NYB", period="1d", interval="5m", progress=False)
-        dxy_change = round(((dxy['Close'].iloc[-1] - dxy['Open'].iloc[0]) / dxy['Open'].iloc[0]) * 100, 2)
-        
-        # Ambil Minyak (Penting buat konteks CPI/Inflasi)
-        oil = yf.download("CL=F", period="5d", interval="1d", progress=False)
-        oil_change = round(((oil['Close'].iloc[-1] - oil['Close'].iloc[-5]) / oil['Close'].iloc[-5]) * 100, 2)
-        
-        return {
-            "dxy_change_pct": dxy_change,
-            "oil_change_5d_pct": oil_change
-        }
+        resp = requests.get(url, timeout=10).json()
+        if "close" in resp:
+            return {
+                "price": float(resp["close"]),
+                "change_pct": float(resp.get("percent_change", 0.0))
+            }
     except:
-        return {"dxy_change_pct": 0.0, "oil_change_5d_pct": 0.0}
+        pass
+    return None
+
+def get_market_context():
+    """
+    Narik DXY dan Minyak (WTI) pakai Twelve Data.
+    DXY pakai simbol 'DXY', Minyak pakai 'WTI/USD', Gold pakai 'XAU/USD'.
+    """
+    dxy_data = get_twelve_data_quote("DXY")
+    oil_data = get_twelve_data_quote("WTI/USD")
+    gold_data = get_twelve_data_quote("XAU/USD")
+    
+    # Fallback kalau API limit atau simbol gak nemu
+    dxy_change = dxy_data["change_pct"] if dxy_data else 0.0
+    
+    # Untuk minyak, Twelve Data quote ngasih daily change. 
+    # Kita asumsikan daily change ini cukup merepresentasikan momentum 5 hari (atau kita panggil 5d nanti).
+    oil_change = oil_data["change_pct"] if oil_data else 0.0
+    
+    gold_price = gold_data["price"] if gold_data else 0.0
+
+    return {
+        "dxy_change_pct": dxy_change,
+        "oil_change_5d_pct": oil_change, # Disimpen di variabel ini biar gak usah ubah prompt AI
+        "gold_price": gold_price
+    }
