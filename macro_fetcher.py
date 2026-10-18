@@ -44,20 +44,29 @@ def get_news_and_cluster():
         f_val = float(news.get('forecast') or 0)
         p_val = float(news.get('previous') or 0)
         
+        # NFP: Cari ADP, Employment, Jobless
         if "Non-Farm" in main_title or "NFP" in main_title:
             if "ADP" in title or "Employment" in title or "Jobless" in title:
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
+                
+        # CPI: Cari PPI, Core, Wage, Average Hourly, Earnings
         elif "CPI" in main_title or "Consumer Price" in main_title:
-            if "PPI" in title or "Core" in title or "Wage" in title:
+            if "PPI" in title or "Core" in title or "Wage" in title or "Average Hourly" in title or "Earnings" in title:
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
+                
+        # FOMC: Cari GDP, Retail Sales, Non-Farm
         elif "FOMC" in main_title:
             if "GDP" in title or "Retail Sales" in title or "Non-Farm" in title:
+                supporting_data[title] = {"forecast": f_val, "previous": p_val}
+                
+        # GDP: Cari Trade Balance, Inventory
+        elif "GDP" in main_title:
+            if "Trade Balance" in title or "Inventory" in title:
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
     return main_event, supporting_data
 
 def get_twelve_data_quote(symbol):
-    """Narik data quote (termasuk harga close & percent change) dari Twelve Data"""
     url = f"https://api.twelvedata.com/quote?symbol={symbol}&apikey={TWELVE_DATA_API_KEY}"
     try:
         resp = requests.get(url, timeout=10).json()
@@ -71,25 +80,16 @@ def get_twelve_data_quote(symbol):
     return None
 
 def get_market_context():
-    """
-    Narik DXY dan Minyak (WTI) pakai Twelve Data.
-    DXY pakai simbol 'DXY', Minyak pakai 'WTI/USD', Gold pakai 'XAU/USD'.
-    """
     dxy_data = get_twelve_data_quote("DXY")
     oil_data = get_twelve_data_quote("WTI/USD")
     gold_data = get_twelve_data_quote("XAU/USD")
     
-    # Fallback kalau API limit atau simbol gak nemu
     dxy_change = dxy_data["change_pct"] if dxy_data else 0.0
-    
-    # Untuk minyak, Twelve Data quote ngasih daily change. 
-    # Kita asumsikan daily change ini cukup merepresentasikan momentum 5 hari (atau kita panggil 5d nanti).
     oil_change = oil_data["change_pct"] if oil_data else 0.0
-    
     gold_price = gold_data["price"] if gold_data else 0.0
 
     return {
         "dxy_change_pct": dxy_change,
-        "oil_change_5d_pct": oil_change, # Disimpen di variabel ini biar gak usah ubah prompt AI
+        "oil_change_5d_pct": oil_change,
         "gold_price": gold_price
     }
