@@ -7,35 +7,36 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# DAFTAR SKENARIO BACKTEST (MARET 2026 - NFP & CPI)
+# DAFTAR SKENARIO BACKTEST (MARET 2026 - SESUAI KALENDER)
 # ====================================================
 SCENARIOS = [
     {
         "title": "Non-Farm Employment Change",
-        "forecast": 65.0,
-        "previous": -133.0,
-        "date_utc": "2026-04-03 12:30:00", # Rilis untuk data Maret
+        "forecast": 150.0,      # Ekspektasi untuk rilis 6 Maret
+        "previous": 50.0,       # Data sebelumnya
+        "date_utc": "2026-03-06 13:30:00", # Tanggal rilis NFP di bulan Maret
         "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 40.0, "previous": 63.0},
-            "Unemployment Rate": {"forecast": 4.4, "previous": 4.4},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4},
-            "Unemployment Claims": {"forecast": 210.0, "previous": 213.0}
+            "ADP Non-Farm Employment Change": {"forecast": 130.0, "previous": 110.0},
+            "Unemployment Rate": {"forecast": 4.1, "previous": 4.2},
+            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
+            "Unemployment Claims": {"forecast": 210.0, "previous": 215.0}
         },
-        "dxy_change": 0.50,
-        "oil_change": 5.0
+        "dxy_change": 0.20,
+        "oil_change": 1.5
     },
     {
         "title": "CPI m/m",
-        "forecast": 0.9,
+        "forecast": 0.3,        # Ekspektasi untuk rilis 11 Maret
         "previous": 0.3,
-        "date_utc": "2026-04-10 12:30:00", # Rilis untuk data Maret
+        "date_utc": "2026-03-11 13:30:00", # Tanggal rilis CPI di bulan Maret
         "supporting": {
-            "Core CPI m/m": {"forecast": 0.3, "previous": 0.2},
-            "PPI m/m": {"forecast": 1.1, "previous": 0.7},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4}
+            "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
+            "PPI m/m": {"forecast": 0.2, "previous": 0.2},
+            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
+            "Employment Cost Index": {"forecast": 1.0, "previous": 1.0}
         },
-        "dxy_change": 0.50,
-        "oil_change": 5.0
+        "dxy_change": -0.10,
+        "oil_change": -2.5
     }
 ]
 # ====================================================
@@ -79,7 +80,7 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest (Twelve Data - Presisi 1m): Maret 2026 (NFP & CPI)*...")
+    send_telegram("⏳ *Memulai Backtest (Kalender Maret 2026): NFP & CPI*...")
     
     for scen in SCENARIOS:
         try:
