@@ -8,20 +8,20 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# SKENARIO TUNGGAL: NFP 7 AGUSTUS 2026
+# SKENARIO TUNGGAL: CPI 12 AGUSTUS 2026
 # ====================================================
-NEWS_TITLE = "Non-Farm Employment Change"
-FORECAST = 175.0
-PREVIOUS = 206.0
-NEWS_DATE_UTC = "2026-08-07 12:30:00"
+NEWS_TITLE = "CPI m/m"
+FORECAST = 0.3
+PREVIOUS = 0.4
+NEWS_DATE_UTC = "2026-08-12 12:30:00"
 
 SUPPORTING_DATA = {
-    "ADP Non-Farm Employment Change": {"forecast": 150.0, "previous": 155.0},
-    "Unemployment Rate": {"forecast": 4.1, "previous": 4.1}
+    "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
+    "PPI m/m": {"forecast": 0.2, "previous": 0.2}
 }
 
-DXY_CHANGE_PCT = -0.35 
-OIL_CHANGE_PCT = 1.2  
+DXY_CHANGE_PCT = -0.20 
+OIL_CHANGE_PCT = -1.5  
 # ====================================================
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -38,14 +38,13 @@ def get_price_at_time(ticker, target_dt, offset_minutes):
     start_date = (target_dt - timedelta(days=5)).strftime("%Y-%m-%d")
     end_date = (target_dt + timedelta(days=5)).strftime("%Y-%m-%d")
     
-    # Coba narik data 5 menit dulu
     df = yf.download(ticker, start=start_date, end=end_date, interval="5m", progress=False)
     
-    # KALAU DATA 5 MENIT KOSONG (karena udah lewat 60 hari), FALLBACK KE 1 JAM
+    # Fallback ke 1H kalau data 5m udah kadaluarsa
     if df.empty:
         print("Data 5m kosong, fallback ke data 1h...")
         df = yf.download(ticker, start=start_date, end=end_date, interval="1h", progress=False)
-        offset_minutes = 60 if offset_minutes > 0 else -60 # Jarak dicek 1 jam
+        offset_minutes = 60 if offset_minutes > 0 else -60
     
     if df.empty: return None
     
@@ -92,7 +91,7 @@ def run_backtest():
         status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
         
         msg = f"""
-🧪 *HASIL BACKTEST NFP AGUSTUS 2026*
+🧪 *HASIL BACKTEST CPI AGUSTUS 2026*
 📅 Event: {NEWS_TITLE}
 
 📊 *Data Gold:*
@@ -111,7 +110,7 @@ Sesudah: ${price_after:.2f}
 🏁 *Hasil:* {status_benar}
 """
         send_telegram(msg)
-        print("Backtest NFP Selesai!")
+        print("Backtest CPI Selesai!")
 
     except Exception as e:
         error_trace = traceback.format_exc()
