@@ -7,7 +7,7 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# DAFTAR SKENARIO BACKTEST (JANUARI 2026)
+# DAFTAR SKENARIO BACKTEST (JANUARI 2026 - DATA LENGKAP)
 # ====================================================
 SCENARIOS = [
     {
@@ -16,7 +16,11 @@ SCENARIOS = [
         "previous": 210.0,
         "date_utc": "2026-01-02 12:30:00",
         "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 140.0, "previous": 150.0}
+            # Data Tenaga Kerja Pendukung NFP
+            "ADP Non-Farm Employment Change": {"forecast": 140.0, "previous": 150.0},
+            "Unemployment Rate": {"forecast": 4.1, "previous": 4.1},
+            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
+            "Unemployment Claims": {"forecast": 220.0, "previous": 215.0}
         },
         "dxy_change": 0.15,
         "oil_change": 0.5
@@ -27,9 +31,11 @@ SCENARIOS = [
         "previous": 0.2,
         "date_utc": "2026-01-13 12:30:00",
         "supporting": {
+            # Data Inflasi Pendukung CPI
             "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
             "PPI m/m": {"forecast": 0.2, "previous": 0.1},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4}
+            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4},
+            "Employment Cost Index": {"forecast": 1.0, "previous": 1.1}
         },
         "dxy_change": 0.25,
         "oil_change": 2.0
@@ -77,7 +83,7 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest (Twelve Data - Presisi 1m): Januari 2026*...")
+    send_telegram("⏳ *Memulai Backtest (Twelve Data - Data Lengkap): Januari 2026*...")
     
     for scen in SCENARIOS:
         try:
@@ -108,8 +114,6 @@ def run_backtest():
             status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
             
             tanggal_rilis = scen['date_utc'][:10]
-            
-            # Ganti nama NFP biar lebih familiar
             event_title = scen['title'].replace("Non-Farm Employment Change", "NFP (Non-Farm Payrolls)")
             
             msg = f"""
