@@ -7,32 +7,32 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# DAFTAR SKENARIO BACKTEST (JULI 2026)
+# DAFTAR SKENARIO BACKTEST (JANUARI 2026)
 # ====================================================
 SCENARIOS = [
     {
         "title": "Non-Farm Employment Change",
-        "forecast": 200.0,
-        "previous": 150.0,
-        "date_utc": "2026-07-03 12:30:00",
+        "forecast": 160.0,
+        "previous": 210.0,
+        "date_utc": "2026-01-02 12:30:00",
         "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 180.0, "previous": 160.0}
+            "ADP Non-Farm Employment Change": {"forecast": 140.0, "previous": 150.0}
         },
-        "dxy_change": 0.40,
-        "oil_change": 1.0
+        "dxy_change": 0.15,
+        "oil_change": 0.5
     },
     {
         "title": "CPI m/m",
         "forecast": 0.3,
-        "previous": 0.4,
-        "date_utc": "2026-07-14 12:30:00",
+        "previous": 0.2,
+        "date_utc": "2026-01-13 12:30:00",
         "supporting": {
             "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
-            "PPI m/m": {"forecast": 0.2, "previous": 0.2},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3}
+            "PPI m/m": {"forecast": 0.2, "previous": 0.1},
+            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4}
         },
-        "dxy_change": -0.30,
-        "oil_change": -2.0
+        "dxy_change": 0.25,
+        "oil_change": 2.0
     }
 ]
 # ====================================================
@@ -53,14 +53,20 @@ def send_telegram(msg):
 
 def get_price_at_time_twelvedata(target_dt, offset_minutes):
     target_time = target_dt + timedelta(minutes=offset_minutes)
-    start_date = (target_time - timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:%S")
-    end_date = (target_time + timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Format 1 menit presisi
+    start_date = target_time.strftime("%Y-%m-%d %H:%M:00")
+    end_date = (target_time + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:00")
     
     url = "https://api.twelvedata.com/time_series"
     params = {
-        "symbol": "XAU/USD", "interval": "5min",
-        "start_date": start_date, "end_date": end_date,
-        "timezone": "UTC", "apikey": TWELVE_DATA_API_KEY, "order": "ASC"
+        "symbol": "XAU/USD", 
+        "interval": "1min", 
+        "start_date": start_date, 
+        "end_date": end_date,
+        "timezone": "UTC", 
+        "apikey": TWELVE_DATA_API_KEY, 
+        "order": "ASC"
     }
     try:
         response = requests.get(url, params=params, timeout=15).json()
@@ -71,13 +77,14 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest (Twelve Data - T+5m): Juli 2026 (NFP & CPI)*...")
+    send_telegram("⏳ *Memulai Backtest (Twelve Data - Presisi 1m): Januari 2026*...")
     
     for scen in SCENARIOS:
         try:
             print(f"\n=== MENGUJI SKENARIO: {scen['title']} ({scen['date_utc']}) ===")
             news_dt = datetime.strptime(scen['date_utc'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
             
+            # Ambil Harga Tepat 5 Menit Sebelum & Sesudah
             price_before = get_price_at_time_twelvedata(news_dt, -5)
             price_after = get_price_at_time_twelvedata(news_dt, 5)
             
@@ -100,16 +107,17 @@ def run_backtest():
             actual_direction = "BUY" if price_moved_up else "SELL"
             status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
             
-            # --- TAMBAHAN: AMBIL TANGGAL (YYYY-MM-DD) DARI SCENARIO ---
             tanggal_rilis = scen['date_utc'][:10]
-            # ----------------------------------------------------------
+            
+            # Ganti nama NFP biar lebih familiar
+            event_title = scen['title'].replace("Non-Farm Employment Change", "NFP (Non-Farm Payrolls)")
             
             msg = f"""
-🧪 *HASIL BACKTEST (T+5 Menit)*
-📅 Event: {scen['title']}
+🧪 *HASIL BACKTEST (T+5m)*
+📅 Event: {event_title}
 📆 Tanggal: {tanggal_rilis}
 
-📊 *Data Gold:*
+📊 *Data XAUUSD (CFD Proxy):*
 Sebelum (T-5): ${price_before:.2f}
 Sesudah (T+5): ${price_after:.2f}
 
