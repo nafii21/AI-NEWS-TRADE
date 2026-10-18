@@ -7,20 +7,20 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# SKENARIO TUNGGAL: NFP 7 AGUSTUS 2026 (Contoh)
+# SKENARIO TUNGGAL: CPI 12 AGUSTUS 2026
 # ====================================================
-NEWS_TITLE = "Non-Farm Employment Change"
-FORECAST = 175.0
-PREVIOUS = 206.0
-NEWS_DATE_UTC = "2026-08-07 12:30:00"
+NEWS_TITLE = "CPI m/m"
+FORECAST = 0.3
+PREVIOUS = 0.4
+NEWS_DATE_UTC = "2026-08-12 12:30:00"
 
 SUPPORTING_DATA = {
-    "ADP Non-Farm Employment Change": {"forecast": 150.0, "previous": 155.0},
-    "Unemployment Rate": {"forecast": 4.1, "previous": 4.1}
+    "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
+    "PPI m/m": {"forecast": 0.2, "previous": 0.2}
 }
 
-DXY_CHANGE_PCT = -0.35 
-OIL_CHANGE_PCT = 1.2  
+DXY_CHANGE_PCT = -0.20 
+OIL_CHANGE_PCT = -1.5  
 # ====================================================
 
 # --- KONFIGURASI TWELVE DATA ---
@@ -39,16 +39,11 @@ def send_telegram(msg):
     except: pass
 
 def get_price_at_time_twelvedata(target_dt, offset_minutes):
-    """
-    Narik harga Gold (XAU/USD) dari Twelve Data pada waktu tertentu (UTC).
-    target_dt: datetime object (UTC)
-    offset_minutes: -5 (sebelum) atau +30 (sesudah)
-    """
     target_time = target_dt + timedelta(minutes=offset_minutes)
     
     # Format tanggal untuk API (YYYY-MM-DD HH:MM:SS)
-    start_date = (target_time - timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S")
-    end_date = (target_time + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S")
+    start_date = (target_time - timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:%S")
+    end_date = (target_time + timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:%S")
     
     url = "https://api.twelvedata.com/time_series"
     params = {
@@ -73,8 +68,6 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
             print(f"[TWELVE DATA] Data kosong untuk {start_date} - {end_date}")
             return None
             
-        # Ambil candle yang paling dekat dengan target_time
-        # Karena kita udah filter start/end sempit, ambil values[0]
         closest_candle = values[0]
         return float(closest_candle["close"])
         
