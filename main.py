@@ -1,5 +1,6 @@
 import os
 import requests
+from datetime import datetime
 from macro_fetcher import get_news_and_cluster, get_market_context
 from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
@@ -18,9 +19,12 @@ def run_agent():
     print("Memulai Analisa Live (Twelve Data)...")
     main_event, supporting_data = get_news_and_cluster()
     
+    # Tanggal hari ini (WIB)
+    today_date = datetime.now().strftime("%Y-%m-%d")
+    
     if not main_event:
         print("Tidak ada berita High Impact USD hari ini (WIB).")
-        send_telegram("🔍 *Hasil Pengecekan:*\nHari ini tidak ada berita High Impact USD di Forex Factory. Belum ada sinyal untuk XAUUSD.")
+        send_telegram(f"🔍 *Hasil Pengecekan ({today_date}):*\nHari ini tidak ada berita High Impact USD di Forex Factory. Belum ada sinyal untuk XAUUSD.")
         return
 
     market_context = get_market_context()
@@ -36,13 +40,14 @@ def run_agent():
     
     if not decision or decision.get('signal') == "ERROR":
         error_msg = decision.get('math_explanation', 'Unknown Error') if decision else 'Gagal API Groq'
-        send_telegram(f"❌ *AI Error:*\n{error_msg}")
+        send_telegram(f"❌ *AI Error ({today_date}):*\n{error_msg}")
         return
 
     ai_signal = decision['signal']
     
     msg = f"""
 🌍 *MACRO QUANT PREDICTION (LIVE)*
+📆 Tanggal: {today_date}
 📅 Event: {main_event['title']}
 ⏰ Rilis: {main_event['wib_time']} WIB
 📊 Forecast: {main_event['forecast']} | Prev: {main_event['previous']}
