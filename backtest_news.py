@@ -7,7 +7,7 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# DAFTAR SKENARIO BACKTEST (MARET 2026 - DATA LENGKAP)
+# DAFTAR SKENARIO BACKTEST (MARET 2026 - NFP & CPI)
 # ====================================================
 SCENARIOS = [
     {
@@ -79,7 +79,7 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest (Twelve Data - Presisi 1m): Maret 2026*...")
+    send_telegram("⏳ *Memulai Backtest (Twelve Data - Presisi 1m): Maret 2026 (NFP & CPI)*...")
     
     for scen in SCENARIOS:
         try:
