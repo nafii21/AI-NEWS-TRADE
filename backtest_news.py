@@ -7,18 +7,19 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# SKENARIO TUNGGAL: CPI 12 AGUSTUS 2026
+# SKENARIO TUNGGAL: CPI 12 AGUSTUS 2026 (LENGKAP)
 # ====================================================
 NEWS_TITLE = "CPI m/m"
 FORECAST = 0.3
 PREVIOUS = 0.4
 NEWS_DATE_UTC = "2026-08-12 12:30:00"
 
-# SUPPORTING DATA LENGKAP (Termasuk Average Hourly Earnings)
+# SEMUA DATA PENDUKUNG YANG MEMPENGARUHI CPI DIMASUKIN
 SUPPORTING_DATA = {
     "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
     "PPI m/m": {"forecast": 0.2, "previous": 0.2},
-    "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4}
+    "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4},
+    "Employment Cost Index": {"forecast": 1.1, "previous": 1.2}
 }
 
 DXY_CHANGE_PCT = -0.20 
@@ -41,47 +42,33 @@ def send_telegram(msg):
 
 def get_price_at_time_twelvedata(target_dt, offset_minutes):
     target_time = target_dt + timedelta(minutes=offset_minutes)
-    
     start_date = (target_time - timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:%S")
     end_date = (target_time + timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:%S")
     
     url = "https://api.twelvedata.com/time_series"
     params = {
-        "symbol": "XAU/USD",
-        "interval": "5min", 
-        "start_date": start_date,
-        "end_date": end_date,
-        "timezone": "UTC",
-        "apikey": TWELVE_DATA_API_KEY,
-        "order": "ASC"
+        "symbol": "XAU/USD", "interval": "5min",
+        "start_date": start_date, "end_date": end_date,
+        "timezone": "UTC", "apikey": TWELVE_DATA_API_KEY, "order": "ASC"
     }
-    
     try:
         response = requests.get(url, params=params, timeout=15).json()
-        if response.get("status") == "error":
-            print(f"[TWELVE DATA ERROR] {response.get('message')}")
-            return None
-            
+        if response.get("status") == "error": return None
         values = response.get("values", [])
         if not values: return None
-            
         return float(values[0]["close"])
-    except Exception as e:
-        print(f"[TWELVE DATA EXCEPTION] {e}")
-        return None
+    except: return None
 
 def run_backtest():
     try:
         send_telegram(f"⏳ *Memulai Backtest (Twelve Data - T+5m):* {NEWS_TITLE}...")
-        
         news_dt = datetime.strptime(NEWS_DATE_UTC, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
         
-        # Cek Harga T-5 Menit dan T+5 Menit
         price_before = get_price_at_time_twelvedata(news_dt, -5) 
         price_after = get_price_at_time_twelvedata(news_dt, 5)  
         
         if not price_before or not price_after:
-            send_telegram(f"❌ Gagal ambil data historis Gold dari Twelve Data.")
+            send_telegram(f"❌ Gagal ambil data historis Gold.")
             return
 
         quant_context = build_pre_news_quant(NEWS_TITLE, FORECAST, PREVIOUS, SUPPORTING_DATA)
@@ -118,8 +105,6 @@ Sesudah (T+5): ${price_after:.2f}
 🏁 *Hasil:* {status_benar}
 """
         send_telegram(msg)
-        print("Backtest Selesai!")
-
     except Exception as e:
         print(traceback.format_exc())
 
