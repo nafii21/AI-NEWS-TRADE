@@ -20,7 +20,6 @@ def get_ai_decision(news_title, quant_context, market_context):
     - Perubahan Harga Minyak 5 Hari: {market_context['oil_change_5d_pct']}%
     
     [ATURAN ANALISA DATA PENDUKUNG]
-    Gunakan logika makro di bawah ini untuk menafsirkan skor data pendukung:
     1. DATA TENAGA KERJA (ADP, Jobless, NFP): Skor positif = Ekonomi kuat (Hawkish) -> SELL Gold. Skor negatif = Ekonomi lemah (Dovish) -> BUY Gold.
     2. DATA INFLASI (CPI, PPI, PCE): Skor positif = Inflasi panas (Hawkish) -> SELL Gold. Skor negatif = Inflasi melandai (Dovish) -> BUY Gold.
     3. UPAH (Average Hourly Earnings, Employment Cost): Skor positif = Daya beli naik, inflasi jasa panas (Hawkish) -> SELL Gold.
@@ -40,21 +39,32 @@ def get_ai_decision(news_title, quant_context, market_context):
     }}
     """
     
-    payload = {
-        "model": "llama-3.3-70b-versatile",
-        "messages": [{"role": "user", "content": prompt}],
-        "response_format": {"type": "json_object"}
-    }
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    # Daftar model pengganti resmi dari Groq
+    models = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
     
-    resp = None
-    try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=30).json()
-        if "error" in resp: 
-            return {"signal": "ERROR", "math_explanation": str(resp["error"]), "confidence": "-", "trade_plan": "-"}
+    for model_name in models:
+        payload = {
+            "model": model_name,
+            "messages": [{"role": "user", "content": prompt}],
+            "response_format": {"type": "json_object"}
+        }
+        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         
-        raw_content = resp["choices"][0]["message"]["content"]
-        clean_json = re.sub(r'```json\n?|```', '', raw_content).strip()
-        return json.loads(clean_json)
-    except Exception as e:
-        return {"signal": "ERROR", "math_explanation": f"Gagal parsing: {e}", "confidence": "-", "trade_plan": "-"}
+        try:
+            resp = requests.post(url, json=payload, headers=headers, timeout=30).json()
+            
+            # Kalau model ini error, coba model berikutnya
+            if "error" in resp:
+                print(f"[MODEL {model_name} GAGAL] {resp['error']}")
+                continue
+            
+            raw_content = resp["choices"][0]["message"]["content"]
+            clean_json = re.sub(r'```json\n?|```', '', raw_content).strip()
+            return json.loads(clean_json)
+            
+        except Exception as e:
+            print(f"[MODEL {model_name} EXCEPTION] {e}")
+            continue
+    
+    # Kalau semua model gagal
+    return {"signal": "ERROR", "math_explanation": "Semua model Groq gagal diakses. Cek API Key atau limit.", "confidence": "-", "trade_plan": "-"}
