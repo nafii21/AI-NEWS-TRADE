@@ -7,16 +7,15 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# DAFTAR SKENARIO BACKTEST (JANUARI 2026 - DATA LENGKAP)
+# DAFTAR SKENARIO BACKTEST (JANUARI 2026 - TANGGAL FIX)
 # ====================================================
 SCENARIOS = [
     {
         "title": "Non-Farm Employment Change",
-        "forecast": 160.0,
-        "previous": 210.0,
-        "date_utc": "2026-01-02 12:30:00",
+        "forecast": 60.0,      # Konsensus pasar saat itu
+        "previous": 56.0,      # Data bulan sebelumnya (Nov 2025)
+        "date_utc": "2026-01-09 13:30:00",  # Rilis untuk data Des 2025
         "supporting": {
-            # Data Tenaga Kerja Pendukung NFP
             "ADP Non-Farm Employment Change": {"forecast": 140.0, "previous": 150.0},
             "Unemployment Rate": {"forecast": 4.1, "previous": 4.1},
             "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
@@ -29,9 +28,8 @@ SCENARIOS = [
         "title": "CPI m/m",
         "forecast": 0.3,
         "previous": 0.2,
-        "date_utc": "2026-01-13 12:30:00",
+        "date_utc": "2026-01-13 13:30:00",  # Rilis untuk data Des 2025
         "supporting": {
-            # Data Inflasi Pendukung CPI
             "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
             "PPI m/m": {"forecast": 0.2, "previous": 0.1},
             "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4},
@@ -60,7 +58,6 @@ def send_telegram(msg):
 def get_price_at_time_twelvedata(target_dt, offset_minutes):
     target_time = target_dt + timedelta(minutes=offset_minutes)
     
-    # Format 1 menit presisi
     start_date = target_time.strftime("%Y-%m-%d %H:%M:00")
     end_date = (target_time + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:00")
     
@@ -83,14 +80,13 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest (Twelve Data - Data Lengkap): Januari 2026*...")
+    send_telegram("⏳ *Memulai Backtest (Twelve Data - Presisi 1m): Januari 2026*...")
     
     for scen in SCENARIOS:
         try:
             print(f"\n=== MENGUJI SKENARIO: {scen['title']} ({scen['date_utc']}) ===")
             news_dt = datetime.strptime(scen['date_utc'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
             
-            # Ambil Harga Tepat 5 Menit Sebelum & Sesudah
             price_before = get_price_at_time_twelvedata(news_dt, -5)
             price_after = get_price_at_time_twelvedata(news_dt, 5)
             
