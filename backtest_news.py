@@ -8,34 +8,20 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# DAFTAR SKENARIO BACKTEST (AGUSTUS 2026)
+# SKENARIO TUNGGAL: NFP 7 AGUSTUS 2026
 # ====================================================
-SCENARIOS = [
-    {
-        "title": "Non-Farm Employment Change",
-        "forecast": 175.0,
-        "previous": 206.0,
-        "date_utc": "2026-08-07 12:30:00",
-        "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 150.0, "previous": 155.0},
-            "Unemployment Rate": {"forecast": 4.1, "previous": 4.1}
-        },
-        "dxy_change": -0.35,
-        "oil_change": 1.2
-    },
-    {
-        "title": "CPI m/m",
-        "forecast": 0.3,
-        "previous": 0.4,
-        "date_utc": "2026-08-12 12:30:00",
-        "supporting": {
-            "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
-            "PPI m/m": {"forecast": 0.2, "previous": 0.2}
-        },
-        "dxy_change": -0.20,
-        "oil_change": -1.5
-    }
-]
+NEWS_TITLE = "Non-Farm Employment Change"
+FORECAST = 175.0
+PREVIOUS = 206.0
+NEWS_DATE_UTC = "2026-08-07 12:30:00"
+
+SUPPORTING_DATA = {
+    "ADP Non-Farm Employment Change": {"forecast": 150.0, "previous": 155.0},
+    "Unemployment Rate": {"forecast": 4.1, "previous": 4.1}
+}
+
+DXY_CHANGE_PCT = -0.35 
+OIL_CHANGE_PCT = 1.2  
 # ====================================================
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -57,10 +43,9 @@ def get_price_at_time(ticker, target_dt, offset_minutes):
     
     # KALAU DATA 5 MENIT KOSONG (karena udah lewat 60 hari), FALLBACK KE 1 JAM
     if df.empty:
-        print("Data 5m gagal/kedaluwarsa, fallback ke data 1h...")
+        print("Data 5m kosong, fallback ke data 1h...")
         df = yf.download(ticker, start=start_date, end=end_date, interval="1h", progress=False)
-        # Karena data 1h jaraknya jauh, kita ubah offset-nya jadi 60 menit (1 jam)
-        offset_minutes = 60 if offset_minutes > 0 else -60
+        offset_minutes = 60 if offset_minutes > 0 else -60 # Jarak dicek 1 jam
     
     if df.empty: return None
     
@@ -79,40 +64,36 @@ def get_price_at_time(ticker, target_dt, offset_minutes):
     return float(val) if not isinstance(val, pd.Series) else float(val.iloc[0])
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest News (Agustus 2026): NFP & CPI*...")
-    
-    for scen in SCENARIOS:
-        try:
-            print(f"\n=== MENGUJI SKENARIO: {scen['title']} ({scen['date_utc']}) ===")
-            news_dt = datetime.strptime(scen['date_utc'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-            
-            price_before = get_price_at_time("GC=F", news_dt, -5)
-            price_after = get_price_at_time("GC=F", news_dt, 30)
-            
-            if not price_before or not price_after:
-                send_telegram(f"❌ Gagal ambil data historis Gold untuk {scen['title']}.")
-                continue
+    try:
+        send_telegram(f"⏳ *Memulai Backtest:* {NEWS_TITLE} (Agustus 2026)...")
+        
+        news_dt = datetime.strptime(NEWS_DATE_UTC, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        
+        price_before = get_price_at_time("GC=F", news_dt, -5)
+        price_after = get_price_at_time("GC=F", news_dt, 30)
+        
+        if not price_before or not price_after:
+            send_telegram(f"❌ Gagal ambil data historis Gold untuk {NEWS_TITLE}.")
+            return
 
-            print(f"Harga Gold Sebelum: {price_before:.2f} | Sesudah: {price_after:.2f}")
-            
-            quant_context = build_pre_news_quant(scen['title'], scen['forecast'], scen['previous'], scen['supporting'])
-            market_context = {"dxy_change_pct": scen['dxy_change'], "oil_change_5d_pct": scen['oil_change']}
+        quant_context = build_pre_news_quant(NEWS_TITLE, FORECAST, PREVIOUS, SUPPORTING_DATA)
+        market_context = {"dxy_change_pct": DXY_CHANGE_PCT, "oil_change_5d_pct": OIL_CHANGE_PCT}
 
-            decision = get_ai_decision(scen['title'], quant_context, market_context)
-            
-            if not decision or decision.get('signal') == "ERROR":
-                error_msg = decision.get('math_explanation', 'Unknown Error') if decision else 'Gagal API Groq'
-                send_telegram(f"❌ *AI Error ({scen['title']}):*\n{error_msg}")
-                continue
+        decision = get_ai_decision(NEWS_TITLE, quant_context, market_context)
+        
+        if not decision or decision.get('signal') == "ERROR":
+            error_msg = decision.get('math_explanation', 'Unknown Error') if decision else 'Gagal API Groq'
+            send_telegram(f"❌ *AI Error:*\n{error_msg}")
+            return
 
-            ai_signal = decision['signal']
-            price_moved_up = price_after > price_before
-            actual_direction = "BUY" if price_moved_up else "SELL"
-            status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
-            
-            msg = f"""
-🧪 *HASIL BACKTEST AGUSTUS 2026*
-📅 Event: {scen['title']}
+        ai_signal = decision['signal']
+        price_moved_up = price_after > price_before
+        actual_direction = "BUY" if price_moved_up else "SELL"
+        status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
+        
+        msg = f"""
+🧪 *HASIL BACKTEST NFP AGUSTUS 2026*
+📅 Event: {NEWS_TITLE}
 
 📊 *Data Gold:*
 Sebelum: ${price_before:.2f}
@@ -129,13 +110,13 @@ Sesudah: ${price_after:.2f}
 📈 *Realita:* Gold {('NAIK' if price_moved_up else 'TURUN')}
 🏁 *Hasil:* {status_benar}
 """
-            send_telegram(msg)
-            print(f"Backtest {scen['title']} Selesai!")
+        send_telegram(msg)
+        print("Backtest NFP Selesai!")
 
-        except Exception as e:
-            error_trace = traceback.format_exc()
-            print(error_trace)
-            send_telegram(f"💥 *Script Crash di {scen['title']}:*\n```\n{error_trace[-300:]}\n```")
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(error_trace)
+        send_telegram(f"💥 *Script Crash:*\n```\n{error_trace[-300:]}\n```")
 
 if __name__ == "__main__":
     run_backtest()
