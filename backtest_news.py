@@ -15,7 +15,7 @@ SCENARIOS = [
         "title": "Non-Farm Employment Change",
         "forecast": 175.0,
         "previous": 206.0,
-        "date_utc": "2026-08-07 12:30:00", # Rilis NFP
+        "date_utc": "2026-08-07 12:30:00",
         "supporting": {
             "ADP Non-Farm Employment Change": {"forecast": 150.0, "previous": 155.0},
             "Unemployment Rate": {"forecast": 4.1, "previous": 4.1}
@@ -27,7 +27,7 @@ SCENARIOS = [
         "title": "CPI m/m",
         "forecast": 0.3,
         "previous": 0.4,
-        "date_utc": "2026-08-12 12:30:00", # Rilis CPI
+        "date_utc": "2026-08-12 12:30:00",
         "supporting": {
             "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
             "PPI m/m": {"forecast": 0.2, "previous": 0.2}
@@ -49,10 +49,19 @@ def send_telegram(msg):
     except: pass
 
 def get_price_at_time(ticker, target_dt, offset_minutes):
-    start_date = (target_dt - timedelta(days=3)).strftime("%Y-%m-%d")
-    end_date = (target_dt + timedelta(days=3)).strftime("%Y-%m-%d")
+    start_date = (target_dt - timedelta(days=5)).strftime("%Y-%m-%d")
+    end_date = (target_dt + timedelta(days=5)).strftime("%Y-%m-%d")
     
+    # Coba narik data 5 menit dulu
     df = yf.download(ticker, start=start_date, end=end_date, interval="5m", progress=False)
+    
+    # KALAU DATA 5 MENIT KOSONG (karena udah lewat 60 hari), FALLBACK KE 1 JAM
+    if df.empty:
+        print("Data 5m gagal/kedaluwarsa, fallback ke data 1h...")
+        df = yf.download(ticker, start=start_date, end=end_date, interval="1h", progress=False)
+        # Karena data 1h jaraknya jauh, kita ubah offset-nya jadi 60 menit (1 jam)
+        offset_minutes = 60 if offset_minutes > 0 else -60
+    
     if df.empty: return None
     
     if isinstance(df.columns, pd.MultiIndex):
@@ -84,7 +93,7 @@ def run_backtest():
                 send_telegram(f"❌ Gagal ambil data historis Gold untuk {scen['title']}.")
                 continue
 
-            print(f"Harga Gold T-5m: {price_before:.2f} | T+30m: {price_after:.2f}")
+            print(f"Harga Gold Sebelum: {price_before:.2f} | Sesudah: {price_after:.2f}")
             
             quant_context = build_pre_news_quant(scen['title'], scen['forecast'], scen['previous'], scen['supporting'])
             market_context = {"dxy_change_pct": scen['dxy_change'], "oil_change_5d_pct": scen['oil_change']}
@@ -106,8 +115,8 @@ def run_backtest():
 📅 Event: {scen['title']}
 
 📊 *Data Gold:*
-T-5 Menit : ${price_before:.2f}
-T+30 Menit: ${price_after:.2f}
+Sebelum: ${price_before:.2f}
+Sesudah: ${price_after:.2f}
 
 🧮 *Kuantitatif:*
 - S_t Utama: {quant_context['main_surprise_score']}
