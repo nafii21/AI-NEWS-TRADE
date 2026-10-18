@@ -1,10 +1,10 @@
-name: XAU Quant News Agent
+name: XAU Live Signal
 
 on:
-  workflow_dispatch: # Cuma jalan kalau lu klik manual
+  workflow_dispatch:
 
 jobs:
-  run-agent:
+  run-live:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -18,9 +18,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
         
-      - name: Run AI Agent
+      - name: Run Live Bot
         run: python main.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }} # <--- TAMBAHAN
