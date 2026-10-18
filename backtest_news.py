@@ -7,14 +7,14 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# DAFTAR SKENARIO BACKTEST (FEBRUARI 2026 - DATA LENGKAP)
+# DAFTAR SKENARIO BACKTEST (FEBRUARI 2026 - TANGGAL DIKOREKSI)
 # ====================================================
 SCENARIOS = [
     {
         "title": "Non-Farm Employment Change",
-        "forecast": 150.0,
-        "previous": 50.0,
-        "date_utc": "2026-02-06 13:30:00",
+        "forecast": 70.0,      # Ekspektasi pasar saat itu
+        "previous": 48.0,      # Data bulan sebelumnya
+        "date_utc": "2026-02-11 13:30:00",  # DIKOREKSI: Mundur dari 6 Feb ke 11 Feb
         "supporting": {
             "ADP Non-Farm Employment Change": {"forecast": 130.0, "previous": 110.0},
             "Unemployment Rate": {"forecast": 4.1, "previous": 4.2},
@@ -28,7 +28,7 @@ SCENARIOS = [
         "title": "CPI m/m",
         "forecast": 0.3,
         "previous": 0.3,
-        "date_utc": "2026-02-11 13:30:00",
+        "date_utc": "2026-02-13 13:30:00", # CPI biasanya rilis pertengahan bulan
         "supporting": {
             "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
             "PPI m/m": {"forecast": 0.2, "previous": 0.2},
@@ -58,7 +58,6 @@ def send_telegram(msg):
 def get_price_at_time_twelvedata(target_dt, offset_minutes):
     target_time = target_dt + timedelta(minutes=offset_minutes)
     
-    # Format 1 menit presisi
     start_date = target_time.strftime("%Y-%m-%d %H:%M:00")
     end_date = (target_time + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:00")
     
@@ -88,7 +87,6 @@ def run_backtest():
             print(f"\n=== MENGUJI SKENARIO: {scen['title']} ({scen['date_utc']}) ===")
             news_dt = datetime.strptime(scen['date_utc'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
             
-            # Ambil Harga Tepat 5 Menit Sebelum & Sesudah
             price_before = get_price_at_time_twelvedata(news_dt, -5)
             price_after = get_price_at_time_twelvedata(news_dt, 5)
             
