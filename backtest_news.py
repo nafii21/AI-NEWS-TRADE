@@ -100,9 +100,14 @@ def run_backtest():
             actual_direction = "BUY" if price_moved_up else "SELL"
             status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
             
+            # --- TAMBAHAN: AMBIL TANGGAL (YYYY-MM-DD) DARI SCENARIO ---
+            tanggal_rilis = scen['date_utc'][:10]
+            # ----------------------------------------------------------
+            
             msg = f"""
-🧪 *HASIL BACKTEST JULI 2026*
+🧪 *HASIL BACKTEST (T+5 Menit)*
 📅 Event: {scen['title']}
+📆 Tanggal: {tanggal_rilis}
 
 📊 *Data Gold:*
 Sebelum (T-5): ${price_before:.2f}
