@@ -8,11 +8,14 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 def send_telegram(msg):
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID: return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"})
+    try:
+        requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"}, timeout=10)
+    except: pass
 
 def run_agent():
-    print("Memulai Analisa Macro Quant...")
+    print("Memulai Analisa Live (Twelve Data)...")
     main_event, supporting_data = get_news_and_cluster()
     
     if not main_event:
@@ -31,10 +34,15 @@ def run_agent():
     
     decision = get_ai_decision(main_event['title'], quant_context, market_context)
     
-    if decision:
-        # Nampilin data DXY & Minyak di Telegram
-        msg = f"""
-🌍 *MACRO QUANT PREDICTION*
+    if not decision or decision.get('signal') == "ERROR":
+        error_msg = decision.get('math_explanation', 'Unknown Error') if decision else 'Gagal API Groq'
+        send_telegram(f"❌ *AI Error:*\n{error_msg}")
+        return
+
+    ai_signal = decision['signal']
+    
+    msg = f"""
+🌍 *MACRO QUANT PREDICTION (LIVE)*
 📅 Event: {main_event['title']}
 ⏰ Rilis: {main_event['wib_time']} WIB
 📊 Forecast: {main_event['forecast']} | Prev: {main_event['previous']}
@@ -43,9 +51,10 @@ def run_agent():
 📉 *Skor Pendukung:*
 {chr(10).join([f"- {k}: {v}" for k, v in quant_context['supporting_analysis'].items()]) if quant_context['supporting_analysis'] else "- Tidak ada data pendukung"}
 
-🌍 *Market:*
+🌍 *Market (Twelve Data):*
+- Harga Gold: ${market_context['gold_price']:.2f}
 - DXY: {market_context['dxy_change_pct']}%
-- Minyak (5D): {market_context['oil_change_5d_pct']}%
+- Minyak (Daily): {market_context['oil_change_5d_pct']}%
 
 🎯 *PREDIKSI: {decision['signal']}*
 🔥 Confidence: {decision['confidence']}
@@ -53,8 +62,8 @@ def run_agent():
 
 💡 *Saran Eksekusi:* {decision['trade_plan']}
 """
-        send_telegram(msg)
-        print(f"Sinyal {main_event['title']} terkirim!")
+    send_telegram(msg)
+    print("Sinyal Live terkirim!")
 
 if __name__ == "__main__":
     run_agent()
