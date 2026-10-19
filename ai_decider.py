@@ -26,6 +26,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     4. PERMINTAAN (Retail Sales, Consumer Confidence): Skor positif = Konsumen belanja agresif (Demand-Pull Inflation) -> SELL Gold.
     5. PERTUMBUHAN (GDP): Skor positif = Ekonomi ekspansif (Hawkish) -> SELL Gold.
     6. KONTEKS MARKET: Jika DXY naik dan Minyak naik, ini konfirmasi kuat pasar lagi diskon Gold (Bearish).
+    7. KHUSUS FOMC: Jika berita utamanya adalah FOMC, fokus pada cross-check data pendukung Inflasi (CPI/PPI/PCE) dan Tenaga Kerja (NFP). Jika data pendukung menunjukkan Inflasi memanas, The Fed akan cenderung Hawkish (SELL Gold).
     
     Tugasmu:
     Gabungkan berita utama, semua data pendukung di atas, dan kondisi market untuk memprediksi arah XAUUSD.
