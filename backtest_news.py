@@ -8,7 +8,7 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# SKENARIO BACKTEST: NFP & CPI SEPTEMBER 2026
+# SKENARIO BACKTEST: NFP & CPI SEPTEMBER 2026 (FIX)
 # ====================================================
 SCENARIOS = [
     {
@@ -29,12 +29,12 @@ SCENARIOS = [
         "title": "CPI m/m",
         "forecast": 0.4, 
         "previous": 0.1,
-        "date_utc": "2026-09-10 12:30:00", # Kamis minggu kedua September
+        "date_utc": "2026-09-11 12:30:00", # <--- DIKOREKSI JADI 11 SEPTEMBER
         "supporting": {
             "Core CPI m/m": {"forecast": 0.2, "previous": 0.2},
             "PPI m/m": {"forecast": 0.2, "previous": 0.2},
             "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.3} # Data Permintaan
+            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.3} 
         },
         "dxy_change": -0.10, 
         "oil_change": 1.0
