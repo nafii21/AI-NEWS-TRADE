@@ -19,7 +19,6 @@ def run_agent():
     print("Memulai Analisa Live (Twelve Data)...")
     main_event, supporting_data = get_news_and_cluster()
     
-    # Tanggal hari ini (WIB)
     today_date = datetime.now().strftime("%Y-%m-%d")
     
     if not main_event:
@@ -45,10 +44,13 @@ def run_agent():
 
     ai_signal = decision['signal']
     
+    # Ganti nama event biar familiar
+    event_title = main_event['title'].replace("Non-Farm Employment Change", "NFP (Non-Farm Payrolls)")
+    
     msg = f"""
 🌍 *MACRO QUANT PREDICTION (LIVE)*
 📆 Tanggal: {today_date}
-📅 Event: {main_event['title']}
+📅 Event: {event_title}
 ⏰ Rilis: {main_event['wib_time']} WIB
 📊 Forecast: {main_event['forecast']} | Prev: {main_event['previous']}
 
