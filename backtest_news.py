@@ -1,303 +1,43 @@
 import os
 import requests
 import json
-import time # <--- TAMBAHAN BUAT JEDA
+import time
 from datetime import datetime, timedelta, timezone
 import traceback
 from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# KUMPULAN SKENARIO BACKTEST 2026 (NFP, CPI, FOMC)
+# SKENARIO BACKTEST: NFP & CPI OKTOBER 2026
 # ====================================================
 SCENARIOS = [
-    # --- JANUARI 2026 ---
     {
         "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 66.0, "previous": 48.0,
-        "date_utc": "2026-02-11 13:30:00",
-        "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 70.0, "previous": 50.0},
-            "Unemployment Rate": {"forecast": 4.1, "previous": 4.1},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Unemployment Claims": {"forecast": 220.0, "previous": 215.0}
-        },
-        "dxy_change": 0.15, "oil_change": 0.5
-    },
-    {
-        "title": "CPI m/m",
-        "forecast": 0.3, "previous": 0.3,
-        "date_utc": "2026-02-13 13:30:00",
-        "supporting": {
-            "Core CPI m/m": {"forecast": 0.3, "previous": 0.2},
-            "PPI m/m": {"forecast": 0.2, "previous": 0.1},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Retail Sales m/m": {"forecast": 0.4, "previous": 0.2}
-        },
-        "dxy_change": 0.10, "oil_change": -0.5
-    },
-    {
-        "title": "FOMC Statement",
-        "forecast": 3.75, "previous": 3.75,
-        "date_utc": "2026-01-28 19:00:00",
-        "supporting": {
-            "GDP q/q": {"forecast": 2.0, "previous": 2.2},
-            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.4},
-            "Non-Farm Employment Change": {"forecast": 60.0, "previous": 56.0}
-        },
-        "dxy_change": 0.20, "oil_change": 0.0
-    },
-
-    # --- FEBRUARI 2026 ---
-    {
-        "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 59.0, "previous": 126.0,
-        "date_utc": "2026-03-06 13:30:00",
-        "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 50.0, "previous": 40.0},
-            "Unemployment Rate": {"forecast": 4.2, "previous": 4.1},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Unemployment Claims": {"forecast": 215.0, "previous": 220.0}
-        },
-        "dxy_change": -0.10, "oil_change": 1.0
-    },
-    {
-        "title": "CPI m/m",
-        "forecast": 0.3, "previous": 0.2,
-        "date_utc": "2026-03-11 13:30:00",
-        "supporting": {
-            "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
-            "PPI m/m": {"forecast": 0.2, "previous": 0.2},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.2}
-        },
-        "dxy_change": 0.05, "oil_change": 2.0
-    },
-
-    # --- MARET 2026 ---
-    {
-        "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 60.0, "previous": -133.0,
-        "date_utc": "2026-04-03 12:30:00",
-        "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 40.0, "previous": 63.0},
-            "Unemployment Rate": {"forecast": 4.4, "previous": 4.4},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4},
-            "Unemployment Claims": {"forecast": 210.0, "previous": 213.0}
-        },
-        "dxy_change": 0.50, "oil_change": 5.0
-    },
-    {
-        "title": "CPI m/m",
-        "forecast": 0.9, "previous": 0.3,
-        "date_utc": "2026-04-10 12:30:00",
-        "supporting": {
-            "Core CPI m/m": {"forecast": 0.3, "previous": 0.2},
-            "PPI m/m": {"forecast": 1.1, "previous": 0.7},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.4},
-            "Retail Sales m/m": {"forecast": 0.5, "previous": 0.3}
-        },
-        "dxy_change": 0.50, "oil_change": 5.0
-    },
-
-    # --- APRIL 2026 ---
-    {
-        "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 62.0, "previous": 178.0,
-        "date_utc": "2026-05-08 12:30:00",
-        "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 70.0, "previous": 60.0},
-            "Unemployment Rate": {"forecast": 4.2, "previous": 4.3},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Unemployment Claims": {"forecast": 215.0, "previous": 210.0}
-        },
-        "dxy_change": 0.10, "oil_change": -1.0
-    },
-    {
-        "title": "CPI m/m",
-        "forecast": 0.6, "previous": 0.9,
-        "date_utc": "2026-05-12 12:30:00",
-        "supporting": {
-            "Core CPI m/m": {"forecast": 0.3, "previous": 0.2},
-            "PPI m/m": {"forecast": 0.5, "previous": 1.1},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Retail Sales m/m": {"forecast": 0.2, "previous": 0.1}
-        },
-        "dxy_change": -0.15, "oil_change": -2.0
-    },
-    {
-        "title": "FOMC Statement",
-        "forecast": 3.75, "previous": 3.75,
-        "date_utc": "2026-04-29 19:00:00",
-        "supporting": {
-            "GDP q/q": {"forecast": 2.1, "previous": 2.0},
-            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.4},
-            "Non-Farm Employment Change": {"forecast": 65.0, "previous": 60.0}
-        },
-        "dxy_change": 0.15, "oil_change": 1.0
-    },
-
-    # --- MEI 2026 ---
-    {
-        "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 85.0, "previous": 115.0,
-        "date_utc": "2026-06-05 12:30:00",
-        "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 80.0, "previous": 75.0},
-            "Unemployment Rate": {"forecast": 4.2, "previous": 4.2},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Unemployment Claims": {"forecast": 220.0, "previous": 215.0}
-        },
-        "dxy_change": -0.20, "oil_change": 0.5
-    },
-    {
-        "title": "CPI m/m",
-        "forecast": 0.5, "previous": 0.6,
-        "date_utc": "2026-06-10 12:30:00",
-        "supporting": {
-            "Core CPI m/m": {"forecast": 0.3, "previous": 0.4},
-            "PPI m/m": {"forecast": 0.3, "previous": 0.5},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.2}
-        },
-        "dxy_change": -0.10, "oil_change": -1.0
-    },
-
-    # --- JUNI 2026 ---
-    {
-        "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 110.0, "previous": 172.0,
-        "date_utc": "2026-07-02 12:30:00",
-        "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 110.0, "previous": 98.0},
-            "Unemployment Rate": {"forecast": 4.3, "previous": 4.2},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Unemployment Claims": {"forecast": 220.0, "previous": 215.0}
-        },
-        "dxy_change": -0.25, "oil_change": -0.5
-    },
-    {
-        "title": "CPI m/m",
-        "forecast": -0.1, "previous": 0.5,
-        "date_utc": "2026-07-14 12:30:00",
-        "supporting": {
-            "Core CPI m/m": {"forecast": 0.3, "previous": 0.2},
-            "PPI m/m": {"forecast": -0.1, "previous": 0.3},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Retail Sales m/m": {"forecast": 0.2, "previous": 0.4}
-        },
-        "dxy_change": -0.30, "oil_change": -3.0
-    },
-    {
-        "title": "FOMC Statement",
-        "forecast": 3.75, "previous": 3.75,
-        "date_utc": "2026-06-17 19:00:00",
-        "supporting": {
-            "GDP q/q": {"forecast": 2.2, "previous": 2.1},
-            "Retail Sales m/m": {"forecast": 0.4, "previous": 0.3},
-            "Non-Farm Employment Change": {"forecast": 110.0, "previous": 120.0}
-        },
-        "dxy_change": 0.25, "oil_change": 0.5
-    },
-
-    # --- JULI 2026 ---
-    {
-        "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 80.0, "previous": 57.0,
-        "date_utc": "2026-08-07 12:30:00",
-        "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 80.0, "previous": 70.0},
-            "Unemployment Rate": {"forecast": 4.2, "previous": 4.2},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Unemployment Claims": {"forecast": 215.0, "previous": 210.0}
-        },
-        "dxy_change": -0.15, "oil_change": 0.0
-    },
-    {
-        "title": "CPI m/m",
-        "forecast": 0.1, "previous": -0.4,
-        "date_utc": "2026-08-12 12:30:00",
-        "supporting": {
-            "Core CPI m/m": {"forecast": 0.2, "previous": 0.2},
-            "PPI m/m": {"forecast": 0.2, "previous": -0.1},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.2}
-        },
-        "dxy_change": -0.10, "oil_change": -1.0
-    },
-    {
-        "title": "FOMC Statement",
-        "forecast": 3.75, "previous": 3.75,
-        "date_utc": "2026-07-29 19:00:00",
-        "supporting": {
-            "GDP q/q": {"forecast": 2.3, "previous": 2.2},
-            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.4},
-            "Non-Farm Employment Change": {"forecast": 80.0, "previous": 90.0}
-        },
-        "dxy_change": 0.10, "oil_change": 0.5
-    },
-
-    # --- AGUSTUS 2026 ---
-    {
-        "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 42.0, "previous": 21.0,
-        "date_utc": "2026-09-04 12:30:00",
-        "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 40.0, "previous": 35.0},
-            "Unemployment Rate": {"forecast": 4.1, "previous": 4.1},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Unemployment Claims": {"forecast": 210.0, "previous": 205.0}
-        },
-        "dxy_change": -0.20, "oil_change": 0.5
-    },
-    {
-        "title": "CPI m/m",
-        "forecast": 0.4, "previous": 0.1,
-        "date_utc": "2026-09-11 12:30:00",
-        "supporting": {
-            "Core CPI m/m": {"forecast": 0.2, "previous": 0.2},
-            "PPI m/m": {"forecast": 0.2, "previous": 0.2},
-            "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.3}
-        },
-        "dxy_change": -0.10, "oil_change": 1.0
-    },
-
-    # --- SEPTEMBER 2026 ---
-    {
-        "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 90.0, "previous": 133.0,
-        "date_utc": "2026-10-02 12:30:00",
+        "forecast": 90.0, 
+        "previous": 133.0,
+        "date_utc": "2026-10-02 12:30:00", # Rilis NFP Awal Oktober
         "supporting": {
             "ADP Non-Farm Employment Change": {"forecast": 80.0, "previous": 70.0},
             "Unemployment Rate": {"forecast": 4.1, "previous": 4.1},
             "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
             "Unemployment Claims": {"forecast": 215.0, "previous": 210.0}
         },
-        "dxy_change": -0.30, "oil_change": -0.5
+        "dxy_change": -0.30, 
+        "oil_change": -0.5
     },
     {
         "title": "CPI m/m",
-        "forecast": 0.6, "previous": 0.4,
-        "date_utc": "2026-10-14 12:30:00",
+        "forecast": 0.6, 
+        "previous": 0.4,
+        "date_utc": "2026-10-14 12:30:00", # Rilis CPI Pertengahan Oktober
         "supporting": {
             "Core CPI m/m": {"forecast": 0.2, "previous": 0.2},
             "PPI m/m": {"forecast": 0.2, "previous": 0.2},
             "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.3}
+            "Retail Sales m/m": {"forecast": 0.3, "previous": 0.3} # Data Permintaan
         },
-        "dxy_change": 0.20, "oil_change": 2.0
-    },
-    {
-        "title": "FOMC Statement",
-        "forecast": 3.75, "previous": 3.75,
-        "date_utc": "2026-09-16 19:00:00",
-        "supporting": {
-            "GDP q/q": {"forecast": 2.4, "previous": 2.3},
-            "Retail Sales m/m": {"forecast": 0.4, "previous": 0.3},
-            "Non-Farm Employment Change": {"forecast": 90.0, "previous": 100.0}
-        },
-        "dxy_change": 0.35, "oil_change": 1.0
+        "dxy_change": 0.20, 
+        "oil_change": 2.0
     }
 ]
 # ====================================================
@@ -336,7 +76,7 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest Masal 2026 (NFP, CPI, FOMC)*...\n_Proses ini akan memakan waktu 5-6 menit karena ada jeda agar tidak kena limit Twelve Data._")
+    send_telegram("⏳ *Memulai Backtest (Oktober 2026): NFP & CPI*...")
     
     for i, scen in enumerate(SCENARIOS, 1):
         try:
@@ -344,9 +84,9 @@ def run_backtest():
             news_dt = datetime.strptime(scen['date_utc'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
             
             price_before = get_price_at_time_twelvedata(news_dt, -5)
-            time.sleep(8) # <--- JEDA 8 DETIK
+            time.sleep(8) # Jeda biar gak kena limit Twelve Data
             price_after = get_price_at_time_twelvedata(news_dt, 5)
-            time.sleep(8) # <--- JEDA 8 DETIK
+            time.sleep(8)
             
             if not price_before or not price_after:
                 send_telegram(f"❌ Gagal ambil data untuk {scen['title']} ({scen['date_utc'][:10]}).")
@@ -368,14 +108,13 @@ def run_backtest():
             status_benar = "✅ BENAR" if ai_signal == actual_direction else ("🤷‍♂️ NO TRADE" if ai_signal == "NO TRADE" else "❌ SALAH")
             
             tanggal_rilis = scen['date_utc'][:10]
-            event_title = scen['title']
             
             msg = f"""
-🧪 *HASIL BACKTEST ({i}/{len(SCENARIOS)})*
-📅 Event: {event_title}
+🧪 *HASIL BACKTEST (T+5m)*
+📅 Event: {scen['title']}
 📆 Tanggal: {tanggal_rilis}
 
-📊 *Data XAUUSD:*
+📊 *Data XAUUSD (CFD Proxy):*
 Sebelum (T-5): ${price_before:.2f}
 Sesudah (T+5): ${price_after:.2f}
 
