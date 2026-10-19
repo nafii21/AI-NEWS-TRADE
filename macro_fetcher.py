@@ -53,9 +53,9 @@ def get_news_and_cluster():
             if any(k in title for k in ["ADP", "Employment", "Jobless", "Unemployment", "Average Hourly", "Earnings", "Wages"]):
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
-        # 2. Klaster CPI (Inflasi)
+        # 2. Klaster CPI (Inflasi - Cost Push, Wage Push, Demand Pull)
         elif "CPI" in main_title or "Consumer Price" in main_title:
-            if any(k in title for k in ["PPI", "Core", "Wage", "Average Hourly", "Earnings", "Employment Cost", "ISM"]):
+            if any(k in title for k in ["PPI", "Core", "Wage", "Average Hourly", "Earnings", "Employment Cost", "ISM", "Retail Sales", "Consumer Confidence"]):
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
         # 3. Klaster FOMC (Suku Bunga)
