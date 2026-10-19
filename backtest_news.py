@@ -7,36 +7,36 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# DAFTAR SKENARIO BACKTEST (MEI 2026 - SESUAI KALENDER)
+# DAFTAR SKENARIO BACKTEST (APRIL 2026 - LENGKAP)
 # ====================================================
 SCENARIOS = [
     {
         "title": "Non-Farm Employment Change",
-        "forecast": 185.0,      
-        "previous": 160.0,       
-        "date_utc": "2026-05-08 12:30:00", # Jumat kedua bulan Mei
+        "forecast": 160.0,      
+        "previous": 130.0,       
+        "date_utc": "2026-04-03 12:30:00", 
         "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 170.0, "previous": 155.0},
-            "Unemployment Rate": {"forecast": 4.0, "previous": 4.1},
+            "ADP Non-Farm Employment Change": {"forecast": 140.0, "previous": 130.0},
+            "Unemployment Rate": {"forecast": 4.1, "previous": 4.1},
             "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Unemployment Claims": {"forecast": 220.0, "previous": 215.0}
+            "Unemployment Claims": {"forecast": 215.0, "previous": 210.0}
         },
-        "dxy_change": 0.25,
-        "oil_change": 1.5
+        "dxy_change": 0.20,
+        "oil_change": -1.0
     },
     {
         "title": "CPI m/m",
         "forecast": 0.3,        
-        "previous": 0.3,
-        "date_utc": "2026-05-13 12:30:00", # Pertengahan bulan Mei
+        "previous": 0.4,
+        "date_utc": "2026-04-10 12:30:00", 
         "supporting": {
             "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
             "PPI m/m": {"forecast": 0.2, "previous": 0.2},
             "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Employment Cost Index": {"forecast": 1.0, "previous": 1.0}
+            "Retail Sales m/m": {"forecast": 0.4, "previous": 0.2} # <--- TAMBAHAN RETAIL SALES
         },
-        "dxy_change": -0.10,
-        "oil_change": -1.0
+        "dxy_change": -0.15,
+        "oil_change": -2.0
     }
 ]
 # ====================================================
@@ -80,7 +80,7 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest (Kalender Mei 2026): NFP & CPI*...")
+    send_telegram("⏳ *Memulai Backtest (Kalender April 2026): NFP & CPI*...")
     
     for scen in SCENARIOS:
         try:
