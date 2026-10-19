@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import time # <--- TAMBAHAN BUAT JEDA
 from datetime import datetime, timedelta, timezone
 import traceback
 from quant_engine import build_pre_news_quant
@@ -335,7 +336,7 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest Masal 2026 (NFP, CPI, FOMC)*...\n_Proses ini mungkin memakan waktu beberapa menit karena banyaknya data._")
+    send_telegram("⏳ *Memulai Backtest Masal 2026 (NFP, CPI, FOMC)*...\n_Proses ini akan memakan waktu 5-6 menit karena ada jeda agar tidak kena limit Twelve Data._")
     
     for i, scen in enumerate(SCENARIOS, 1):
         try:
@@ -343,7 +344,9 @@ def run_backtest():
             news_dt = datetime.strptime(scen['date_utc'], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
             
             price_before = get_price_at_time_twelvedata(news_dt, -5)
+            time.sleep(8) # <--- JEDA 8 DETIK
             price_after = get_price_at_time_twelvedata(news_dt, 5)
+            time.sleep(8) # <--- JEDA 8 DETIK
             
             if not price_before or not price_after:
                 send_telegram(f"❌ Gagal ambil data untuk {scen['title']} ({scen['date_utc'][:10]}).")
