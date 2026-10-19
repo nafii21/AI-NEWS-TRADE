@@ -7,7 +7,7 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# DAFTAR SKENARIO BACKTEST (APRIL 2026 - SESUAI KALENDER)
+# DAFTAR SKENARIO BACKTEST (APRIL 2026 - TANGGAL FIX)
 # ====================================================
 SCENARIOS = [
     {
@@ -28,7 +28,7 @@ SCENARIOS = [
         "title": "CPI m/m",
         "forecast": 0.3,        
         "previous": 0.4,
-        "date_utc": "2026-04-14 12:30:00", # Pertengahan bulan April
+        "date_utc": "2026-04-10 12:30:00", # DIKOREKSI: Rilis CPI data Maret 2026
         "supporting": {
             "Core CPI m/m": {"forecast": 0.3, "previous": 0.3},
             "PPI m/m": {"forecast": 0.2, "previous": 0.2},
