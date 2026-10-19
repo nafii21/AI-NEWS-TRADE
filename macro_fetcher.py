@@ -58,9 +58,9 @@ def get_news_and_cluster():
             if any(k in title for k in ["PPI", "Core", "Wage", "Average Hourly", "Earnings", "Employment Cost", "ISM", "Retail Sales", "Consumer Confidence"]):
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
-        # 3. Klaster FOMC (Suku Bunga)
+        # 3. Klaster FOMC (Suku Bunga + Inflasi & Tenaga Kerja)
         elif "FOMC" in main_title or "Federal Funds" in main_title:
-            if any(k in title for k in ["GDP", "Retail Sales", "Non-Farm", "PCE", "CPI", "PPI"]):
+            if any(k in title for k in ["GDP", "Retail Sales", "Non-Farm", "PCE", "CPI", "PPI", "Core", "Employment Cost"]):
                 supporting_data[title] = {"forecast": f_val, "previous": p_val}
                 
         # 4. Klaster Retail Sales (Penjualan Ritel)
