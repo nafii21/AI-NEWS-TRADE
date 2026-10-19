@@ -23,8 +23,8 @@ def get_ai_decision(news_title, quant_context, market_context):
     1. DATA TENAGA KERJA (ADP, Jobless, NFP): Skor positif = Ekonomi kuat (Hawkish) -> SELL Gold. Skor negatif = Ekonomi lemah (Dovish) -> BUY Gold.
     2. DATA INFLASI (CPI, PPI, PCE): Skor positif = Inflasi panas (Hawkish) -> SELL Gold. Skor negatif = Inflasi melandai (Dovish) -> BUY Gold.
     3. UPAH (Average Hourly Earnings, Employment Cost): Skor positif = Daya beli naik, inflasi jasa panas (Hawkish) -> SELL Gold.
-    4. PERTUMBUHAN (GDP, Retail Sales): Skor positif = Ekonomi ekspansif (Hawkish) -> SELL Gold.
-    5. KEPERCAYAAN (Consumer Confidence): Skor positif = Konsumen optimis (Hawkish) -> SELL Gold.
+    4. PERMINTAAN (Retail Sales, Consumer Confidence): Skor positif = Konsumen belanja agresif (Demand-Pull Inflation) -> SELL Gold.
+    5. PERTUMBUHAN (GDP): Skor positif = Ekonomi ekspansif (Hawkish) -> SELL Gold.
     6. KONTEKS MARKET: Jika DXY naik dan Minyak naik, ini konfirmasi kuat pasar lagi diskon Gold (Bearish).
     
     Tugasmu:
