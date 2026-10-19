@@ -8,36 +8,36 @@ from quant_engine import build_pre_news_quant
 from ai_decider import get_ai_decision
 
 # ====================================================
-# SKENARIO BACKTEST: NFP & CPI OKTOBER 2026
+# SKENARIO BACKTEST: NFP & CPI SEPTEMBER 2026
 # ====================================================
 SCENARIOS = [
     {
         "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 90.0, 
-        "previous": 133.0,
-        "date_utc": "2026-10-02 12:30:00", # Rilis NFP Awal Oktober
+        "forecast": 42.0, 
+        "previous": 21.0,
+        "date_utc": "2026-09-04 12:30:00", # Jumat pertama September
         "supporting": {
-            "ADP Non-Farm Employment Change": {"forecast": 80.0, "previous": 70.0},
+            "ADP Non-Farm Employment Change": {"forecast": 40.0, "previous": 35.0},
             "Unemployment Rate": {"forecast": 4.1, "previous": 4.1},
             "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
-            "Unemployment Claims": {"forecast": 215.0, "previous": 210.0}
+            "Unemployment Claims": {"forecast": 210.0, "previous": 205.0}
         },
-        "dxy_change": -0.30, 
-        "oil_change": -0.5
+        "dxy_change": -0.20, 
+        "oil_change": 0.5
     },
     {
         "title": "CPI m/m",
-        "forecast": 0.6, 
-        "previous": 0.4,
-        "date_utc": "2026-10-14 12:30:00", # Rilis CPI Pertengahan Oktober
+        "forecast": 0.4, 
+        "previous": 0.1,
+        "date_utc": "2026-09-10 12:30:00", # Kamis minggu kedua September
         "supporting": {
             "Core CPI m/m": {"forecast": 0.2, "previous": 0.2},
             "PPI m/m": {"forecast": 0.2, "previous": 0.2},
             "Average Hourly Earnings m/m": {"forecast": 0.3, "previous": 0.3},
             "Retail Sales m/m": {"forecast": 0.3, "previous": 0.3} # Data Permintaan
         },
-        "dxy_change": 0.20, 
-        "oil_change": 2.0
+        "dxy_change": -0.10, 
+        "oil_change": 1.0
     }
 ]
 # ====================================================
@@ -76,7 +76,7 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest (Oktober 2026): NFP & CPI*...")
+    send_telegram("⏳ *Memulai Backtest (September 2026): NFP & CPI*...")
     
     for i, scen in enumerate(SCENARIOS, 1):
         try:
