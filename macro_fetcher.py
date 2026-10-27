@@ -16,15 +16,19 @@ def clean_float(val):
         return 0.0
 
 def get_fmp_calendar():
-    """Narik kalender ekonomi dari 30 hari lalu sampai 3 hari ke depan dari FMP"""
     today = datetime.now(timezone.utc)
     from_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
     to_date = (today + timedelta(days=3)).strftime("%Y-%m-%d")
     
-    # FMP free tier mendukung parameter from & to, plus filter country
     url = f"https://financialmodelingprep.com/api/v3/economic_calendar?from={from_date}&to={to_date}&apikey={FMP_API_KEY}"
     try:
         resp = requests.get(url, timeout=20).json()
+        
+        # --- PENGAMAN: Cek apakah responnya list (data beneran) atau dict (pesan error) ---
+        if not isinstance(resp, list):
+            print(f"FMP API ERROR: {resp}")
+            return [] 
+            
         return resp
     except Exception as e:
         print(f"Error fetching FMP: {e}")
@@ -43,13 +47,15 @@ def get_news_and_cluster():
     macro_dashboard = {}
     
     for n in calendar:
+        # Pengaman tambahan: pastikan n itu dictionary
+        if not isinstance(n, dict): continue
+        
         country = n.get('country', '')
         if country not in ['US', 'USD']: continue
         
         event_name = n.get('event', '')
         impact = n.get('impact', '')
         
-        # FMP menyediakan data Actual untuk event yang sudah rilis
         act = clean_float(n.get('actual'))
         fcst = clean_float(n.get('estimate'))
         prev = clean_float(n.get('prev'))
