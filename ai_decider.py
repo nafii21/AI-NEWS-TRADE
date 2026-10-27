@@ -4,12 +4,11 @@ import json
 import re
 
 def get_ai_decision(news_title, quant_context, market_context):
-    # --- KONFIGURASI SAKELAR.ID (SESUAIKAN DENGAN DASHBOARD LU) ---
-    api_key = os.getenv("SAKELAR_API_KEY") 
-    # Cek dokumentasi Sakelar.id, biasanya formatnya mirip OpenAI
-    url = "https://api.sakelar.id/v1/chat/completions"  # <--- GANTI BASE URL KALAU BEDA
-    model_name = "deepseek-v4.1-flash"                  # <--- GANTI NAMA MODEL KALAU BEDA
-    # -------------------------------------------------------------
+    # --- KONFIGURASI SKAILAR ---
+    api_key = os.getenv("SKAILAR_API_KEY")
+    url = "https://api.skailar.com/v1/chat/completions"
+    model_name = "deepseek-flash"  # Ganti jika dashboard Skailar pakai ID lain
+    # ---------------------------
     
     prompt = f"""
     Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD (Gold).
@@ -52,26 +51,35 @@ def get_ai_decision(news_title, quant_context, market_context):
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.3,
-        "response_format": {"type": "json_object"} # Pastikan Sakelar.id support JSON mode
+        "response_format": {"type": "json_object"}
     }
     
     headers = {
-        "Authorization": f"Bearer {api_key}", 
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
     
     try:
         resp = requests.post(url, json=payload, headers=headers, timeout=45).json()
         
-        # Cek error dari gateway
         if "error" in resp:
-            print(f"[SAKELAR ERROR] {resp['error']}")
-            return {"signal": "ERROR", "math_explanation": str(resp["error"]), "confidence": "-", "trade_plan": "-"}
+            print(f"[SKAILAR ERROR] {resp['error']}")
+            return {
+                "signal": "ERROR",
+                "math_explanation": str(resp["error"]),
+                "confidence": "-",
+                "trade_plan": "-"
+            }
             
         raw_content = resp["choices"][0]["message"]["content"]
         clean_json = re.sub(r'```json\n?|```', '', raw_content).strip()
         return json.loads(clean_json)
         
     except Exception as e:
-        print(f"[SAKELAR EXCEPTION] {e}")
-        return {"signal": "ERROR", "math_explanation": f"Gagal parsing: {e}", "confidence": "-", "trade_plan": "-"}
+        print(f"[SKAILAR EXCEPTION] {e}")
+        return {
+            "signal": "ERROR",
+            "math_explanation": f"Gagal parsing: {e}",
+            "confidence": "-",
+            "trade_plan": "-"
+        }
