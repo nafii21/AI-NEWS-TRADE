@@ -11,6 +11,17 @@ def get_ff_calendar():
     except:
         return []
 
+# --- FUNGSI BARU BUAT BERSIHIN TEKS ANGKA ---
+def clean_float(val):
+    if val is None or val == "": return 0.0
+    # Hapus tanda % dan koma
+    val_str = str(val).replace('%', '').replace(',', '').strip()
+    try:
+        return float(val_str)
+    except:
+        return 0.0
+# --------------------------------------------
+
 def get_news_and_cluster():
     calendar = get_ff_calendar()
     
@@ -46,8 +57,9 @@ def get_news_and_cluster():
         main_title = main_event['title']
         event_date = main_event['event_date']
         
-        main_event['forecast'] = float(main_event.get('forecast') or 0)
-        main_event['previous'] = float(main_event.get('previous') or 0)
+        # PAKAI FUNGSI CLEAN_FLOAT DISINI
+        main_event['forecast'] = clean_float(main_event.get('forecast'))
+        main_event['previous'] = clean_float(main_event.get('previous'))
         
         supporting_data = {}
         for news in calendar:
@@ -61,10 +73,11 @@ def get_news_and_cluster():
                 if news['title'] == main_title: continue
                     
                 title = news['title']
-                f_val = float(news.get('forecast') or 0)
-                p_val = float(news.get('previous') or 0)
+                # PAKAI FUNGSI CLEAN_FLOAT DISINI JUGA
+                f_val = clean_float(news.get('forecast'))
+                p_val = clean_float(news.get('previous'))
                 
-                # Logika Clustering (Sama seperti sebelumnya)
+                # Logika Clustering
                 if "Non-Farm" in main_title or "NFP" in main_title:
                     if any(k in title for k in ["ADP", "Employment", "Jobless", "Unemployment", "Average Hourly", "Earnings", "Wages"]):
                         supporting_data[title] = {"forecast": f_val, "previous": p_val}
