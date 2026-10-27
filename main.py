@@ -16,52 +16,52 @@ def send_telegram(msg):
     except: pass
 
 def run_agent():
-    print("Memulai Analisa Live (Twelve Data)...")
-    main_event, supporting_data = get_news_and_cluster()
+    print("Memulai Analisa Live (Proyeksi 3 Hari)...")
+    processed_events = get_news_and_cluster()
     
     today_date = datetime.now().strftime("%Y-%m-%d")
     
-    if not main_event:
-        print("Tidak ada berita High Impact USD hari ini (WIB).")
-        send_telegram(f"🔍 *Hasil Pengecekan ({today_date}):*\nHari ini tidak ada berita High Impact USD di Forex Factory. Belum ada sinyal untuk XAUUSD.")
+    if not processed_events:
+        print("Tidak ada berita High Impact USD untuk 3 hari ke depan.")
+        send_telegram(f"🔍 *Hasil Pengecekan ({today_date}):*\nTidak ada berita High Impact USD untuk 3 hari ke depan (Hari ini, Besok, Lusa).")
         return
 
+    # Tarik data market hari ini (jadi acuan untuk semua prediksi)
     market_context = get_market_context()
     
-    quant_context = build_pre_news_quant(
-        main_event['title'], 
-        main_event['forecast'], 
-        main_event['previous'], 
-        supporting_data
-    )
+    send_telegram(f"🔄 *Memproses {len(processed_events)} Berita Penting (3 Hari Ke Depan)*...")
     
-    decision = get_ai_decision(main_event['title'], quant_context, market_context)
-    
-    if not decision or decision.get('signal') == "ERROR":
-        error_msg = decision.get('math_explanation', 'Unknown Error') if decision else 'Gagal API Groq'
-        send_telegram(f"❌ *AI Error ({today_date}):*\n{error_msg}")
-        return
+    for item in processed_events:
+        main_event = item['event']
+        supporting_data = item['supporting_data']
+        
+        quant_context = build_pre_news_quant(
+            main_event['title'], 
+            main_event['forecast'], 
+            main_event['previous'], 
+            supporting_data
+        )
+        
+        decision = get_ai_decision(main_event['title'], quant_context, market_context)
+        
+        if not decision or decision.get('signal') == "ERROR":
+            error_msg = decision.get('math_explanation', 'Unknown Error') if decision else 'Gagal API Groq'
+            send_telegram(f"❌ *AI Error ({main_event['title']} - {main_event['wib_date']}):*\n{error_msg}")
+            continue
 
-    ai_signal = decision['signal']
-    
-    # Ganti nama event biar familiar
-    event_title = main_event['title'].replace("Non-Farm Employment Change", "NFP (Non-Farm Payrolls)")
-    
-    msg = f"""
+        ai_signal = decision['signal']
+        event_title = main_event['title'].replace("Non-Farm Employment Change", "NFP (Non-Farm Payrolls)")
+        
+        msg = f"""
 🌍 *MACRO QUANT PREDICTION (LIVE)*
-📆 Tanggal: {today_date}
+📆 Tanggal Rilis: {main_event['wib_date']}
 📅 Event: {event_title}
-⏰ Rilis: {main_event['wib_time']} WIB
+⏰ Jam: {main_event['wib_time']} WIB
 📊 Forecast: {main_event['forecast']} | Prev: {main_event['previous']}
 
 🧮 *Surprise Score (S_t): {quant_context['main_surprise_score']}*
 📉 *Skor Pendukung:*
 {chr(10).join([f"- {k}: {v}" for k, v in quant_context['supporting_analysis'].items()]) if quant_context['supporting_analysis'] else "- Tidak ada data pendukung"}
-
-🌍 *Market (Twelve Data):*
-- Harga Gold: ${market_context['gold_price']:.2f}
-- DXY: {market_context['dxy_change_pct']}%
-- Minyak (Daily): {market_context['oil_change_5d_pct']}%
 
 🎯 *PREDIKSI: {decision['signal']}*
 🔥 Confidence: {decision['confidence']}
@@ -69,8 +69,18 @@ def run_agent():
 
 💡 *Saran Eksekusi:* {decision['trade_plan']}
 """
-    send_telegram(msg)
-    print("Sinyal Live terkirim!")
+        send_telegram(msg)
+        print(f"Sinyal {event_title} ({main_event['wib_date']}) terkirim!")
+        
+    # Footer info market saat ini
+    market_msg = f"""
+📊 *KONDISI MARKET SAAT INI (Acuan):*
+- Harga Gold: ${market_context['gold_price']:.2f}
+- DXY: {market_context['dxy_change_pct']}%
+- Minyak: {market_context['oil_change_5d_pct']}%
+"""
+    send_telegram(market_msg)
+    print("Semua sinyal dan konteks market terkirim!")
 
 if __name__ == "__main__":
     run_agent()
