@@ -1,5 +1,6 @@
 import os
 import requests
+import time # <--- TAMBAHAN BUAT JEDA
 from datetime import datetime
 from macro_fetcher import get_news_and_cluster, get_market_context
 from quant_engine import build_pre_news_quant
@@ -8,12 +9,19 @@ from ai_decider import get_ai_decision
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
+# Fungsi kirim telegram yang lebih kebal error
 def send_telegram(msg):
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID: return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     try:
-        requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"}, timeout=10)
-    except: pass
+        # Coba kirim pake Markdown
+        resp = requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"}, timeout=10)
+        if resp.status_code != 200:
+            # Kalau gagal (karena karakter aneh), kirim pake teks biasa
+            print("Gagal Markdown, kirim teks biasa...")
+            requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg}, timeout=10)
+    except Exception as e:
+        print(f"Error Telegram: {e}")
 
 def run_agent():
     print("Memulai Analisa Live (Proyeksi 3 Hari)...")
@@ -23,10 +31,9 @@ def run_agent():
     
     if not processed_events:
         print("Tidak ada berita High Impact USD untuk 3 hari ke depan.")
-        send_telegram(f"🔍 *Hasil Pengecekan ({today_date}):*\nTidak ada berita High Impact USD untuk 3 hari ke depan (Hari ini, Besok, Lusa).")
+        send_telegram(f"🔍 *Hasil Pengecekan ({today_date}):*\nTidak ada berita High Impact USD untuk 3 hari ke depan.")
         return
 
-    # Tarik data market hari ini (jadi acuan untuk semua prediksi)
     market_context = get_market_context()
     
     send_telegram(f"🔄 *Memproses {len(processed_events)} Berita Penting (3 Hari Ke Depan)*...")
@@ -71,6 +78,9 @@ def run_agent():
 """
         send_telegram(msg)
         print(f"Sinyal {event_title} ({main_event['wib_date']}) terkirim!")
+        
+        # JEDA 3 DETIK BIAR GROQ & TELEGRAM GAK KEWALAHAN
+        time.sleep(3)
         
     # Footer info market saat ini
     market_msg = f"""
