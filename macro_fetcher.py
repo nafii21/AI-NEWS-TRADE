@@ -15,9 +15,6 @@ def clean_float(val):
     except:
         return 0.0
 
-# ==========================================
-# 1. JADWAL RILIS 3 HARI KE DEPAN (Forex Factory)
-# ==========================================
 def get_ff_upcoming_events():
     urls = [
         "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
@@ -49,9 +46,6 @@ def get_ff_upcoming_events():
         except: continue
     return upcoming
 
-# ==========================================
-# 2. DATA HISTORIS 30 HARI (FXMacroData - FIXED)
-# ==========================================
 def get_historical_indicator(indicator_slug):
     url = f"{FXMACRODATA_BASE}/announcements/usd/{indicator_slug}?limit=30"
     try:
@@ -85,18 +79,19 @@ def get_macro_dashboard():
             print(f"[DEBUG] Data kosong untuk {slug}")
             continue
             
-        # --- PERBAIKAN 1: Urutkan berdasarkan tanggal (Terbaru di atas) ---
         try:
             data_sorted = sorted(data, key=lambda x: x.get('date', ''), reverse=True)
             latest = data_sorted[0]
         except Exception as e:
-            print(f"[DEBUG] Gagal sorting {slug}: {e}")
             latest = data[0]
             
-        # --- PERBAIKAN 2: Ambil key 'consensus' buat forecast ---
-        act = clean_float(latest.get('val') or latest.get('actual'))
-        fcst = clean_float(latest.get('consensus') or latest.get('forecast'))
-        prev = clean_float(latest.get('previous'))
+        # --- PERBAIKAN: Cek semua kemungkinan nama key buat Forecast ---
+        act = clean_float(latest.get('val') or latest.get('actual') or latest.get('value'))
+        fcst = clean_float(latest.get('consensus') or latest.get('forecast') or latest.get('forecast_value') or latest.get('estimate'))
+        prev = clean_float(latest.get('previous') or latest.get('prev'))
+        
+        # Print buat mastiin di log GitHub
+        print(f"[FXMACRO DEBUG] {display_name} | Act: {act} | Fcst: {fcst} | Date: {latest.get('date')}")
         
         if act != 0:
             dashboard[display_name] = {
@@ -106,18 +101,13 @@ def get_macro_dashboard():
                 "date": latest.get('date', '')[:10]
             }
             
-    print(f"[DEBUG] Berhasil ambil {len(dashboard)} data makro dari FXMacroData.")
     return dashboard
 
-# ==========================================
-# 3. GABUNGIN JADWAL & DATA HISTORIS
-# ==========================================
 def get_news_and_cluster():
     print("Mengambil jadwal berita dari Forex Factory...")
     upcoming_events = get_ff_upcoming_events()
     
     if not upcoming_events: 
-        print("Tidak ada berita High Impact FF untuk 3 hari ke depan.")
         return []
     
     print("Mengambil data Actual dari FXMacroData...")
@@ -132,9 +122,6 @@ def get_news_and_cluster():
         
     return processed_events
 
-# ==========================================
-# 4. KONTEKS MARKET
-# ==========================================
 def get_twelve_data_gold():
     url = f"https://api.twelvedata.com/quote?symbol=XAU/USD&apikey={TWELVE_DATA_API_KEY}"
     try:
