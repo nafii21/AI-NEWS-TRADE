@@ -40,8 +40,8 @@ def get_ai_decision(news_title, quant_context, market_context):
     }}
     """
     
-    # Model Groq yang paling stabil saat ini
-    models = ["llama-3.3-70b-versatile", "llama3-70b-8192", "mixtral-8x7b-32768"]
+    # Model pengganti resmi dari Groq
+    models = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
     
     for model_name in models:
         payload = {
@@ -53,7 +53,6 @@ def get_ai_decision(news_title, quant_context, market_context):
         
         try:
             resp = requests.post(url, json=payload, headers=headers, timeout=30).json()
-            
             if "error" in resp:
                 print(f"[MODEL {model_name} GAGAL] {resp['error']}")
                 continue
