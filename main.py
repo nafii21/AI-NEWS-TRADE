@@ -55,11 +55,11 @@ def run_agent():
         ai_signal = decision['signal']
         event_title = main_event['title'].replace("Non-Farm Employment Change", "NFP (Non-Farm Payrolls)")
         
-        # Format skor pendukung (TAMBAH TANGGAL DISINI)
+        # Format skor pendukung
         support_text = ""
         if quant_context['supporting_analysis']:
             for k, v in quant_context['supporting_analysis'].items():
-                tgl = v.get('date', 'Tgl ?') # <--- AMBIL TANGGAL
+                tgl = v.get('date', 'Tgl ?')
                 support_text += f"  - {k} ({tgl}): {v['desc']} (Skor: {v['score']})\n"
         else:
             support_text = "  - Tidak ada data pendukung\n"
