@@ -8,7 +8,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     url = "https://api.sakelar.web.id/v1/chat/completions"
     
     # --- GANTI NAMA MODEL DI SINI SESUAI DASHBOARD SAKELAR ---
-    model_name = "deepseek-chat" # <--- Coba ganti jadi ini, atau "deepseek-v4.1-flash"
+    model_name = "deepseek-v4.1-flash" # <--- Coba ganti jadi ini, atau "deepseek-v4.1-flash"
     # ---------------------------------------------------------
     
     prompt = f"""
