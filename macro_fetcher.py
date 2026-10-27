@@ -8,10 +8,15 @@ TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
 FXMACRODATA_API_KEY = os.getenv("FXMACRODATA_API_KEY")
 FXMACRODATA_BASE = "https://api.fxmacrodata.com/v1"
 
-HEADERS = {
-    "X-API-Key": FXMACRODATA_API_KEY,
-    "Accept-Encoding": "gzip"
-}
+# Cek API Key
+if not FXMACRODATA_API_KEY:
+    print("[WARNING] FXMACRODATA_API_KEY tidak ditemukan di GitHub Secrets!")
+    HEADERS = {}
+else:
+    HEADERS = {
+        "X-API-Key": FXMACRODATA_API_KEY,
+        "Accept-Encoding": "gzip"
+    }
 
 def clean_float(val):
     if val is None or val == "": return 0.0
@@ -56,10 +61,9 @@ def get_ff_upcoming_events():
     return upcoming
 
 # ==========================================
-# 2. AMBIL DATA HISTORIS (Super Defensif)
+# 2. AMBIL DATA HISTORIS (Actual & Forecast Join by ID)
 # ==========================================
 def get_historical_indicator(indicator_slug):
-    # A. Ambil Actual & Previous
     url_ann = f"{FXMACRODATA_BASE}/announcements/usd/{indicator_slug}?limit=50"
     data_actual = []
     try:
@@ -69,10 +73,9 @@ def get_historical_indicator(indicator_slug):
             if isinstance(data, dict) and 'data' in data:
                 data_actual = data['data']
     except Exception as e:
-        print(f"[ERROR ANN] {indicator_slug}: {e}")
+        print(f"[FXMACRO ERROR Announcements] {indicator_slug}: {e}")
 
-    # B. Ambil Forecast
-    url_pred = f"{FXMACRODATA_BASE}/predictions/usd/{indicator_slug}?prediction_type=market_consensus&pre_release_only=true&limit=50"
+    url_pred = f"{FXMACRODATA_BASE}/predictions/usd/{indicator_slug}?prediction_type=market_consensus&limit=50"
     data_pred = []
     try:
         resp = requests.get(url_pred, headers=HEADERS, timeout=15)
@@ -81,7 +84,7 @@ def get_historical_indicator(indicator_slug):
             if isinstance(data, dict) and 'data' in data:
                 data_pred = data['data']
     except Exception as e:
-        print(f"[ERROR PRED] {indicator_slug}: {e}")
+        print(f"[FXMACRO ERROR Predictions] {indicator_slug}: {e}")
         
     return data_actual, data_pred
 
@@ -106,17 +109,15 @@ def get_macro_dashboard():
         if not actuals:
             continue
             
-        # Bikin mapping prediksi berdasarkan TANGGAL (bukan ID)
         pred_map = {}
         for p in predictions:
-            p_date = p.get('date', '')[:10]
+            ann_id = p.get('announcement_id')
             preds = p.get('predictions', [])
-            if p_date and preds:
+            if ann_id and preds:
                 consensus = next((x for x in preds if x.get('prediction_type') == 'market_consensus'), None)
                 if consensus:
-                    pred_map[p_date] = clean_float(consensus.get('predicted_value'))
+                    pred_map[ann_id] = clean_float(consensus.get('predicted_value'))
                 
-        # Cari data actual paling baru
         valid_data = []
         for item in actuals:
             date_str = item.get('date', '')[:10]
@@ -133,28 +134,21 @@ def get_macro_dashboard():
             
         valid_data.sort(key=lambda x: x['parsed_date'], reverse=True)
         latest = valid_data[0]
-        date_str = latest.get('date', '')[:10]
         
-        # --- DEFENSIVE EXTRACTION ---
-        act = clean_float(latest.get('val') or latest.get('actual') or latest.get('value'))
-        # Cek semua kemungkinan nama key buat Previous
-        prev = clean_float(latest.get('previous_value') or latest.get('prev') or latest.get('previous'))
+        act = clean_float(latest.get('val'))
+        prev = clean_float(latest.get('previous_value'))
+        ann_id = latest.get('announcement_id')
+        fcst = pred_map.get(ann_id, 0.0)
         
-        # Cocokin forecast pakai tanggal
-        fcst = pred_map.get(date_str, 0.0)
-        
-        # --- PRINT RAW DATA BUAT DEBUG DI GITHUB ---
-        print(f"[DEBUG RAW] {display_name} | Date: {date_str} | Act: {act} | Fcst: {fcst} | Prev: {prev}")
-        if fcst == 0.0:
-            print(f"   -> RAW PRED: {predictions[:1]}") # Print 1 data prediksi buat liat strukturnya
-            
-        # --- FIX NFP SCALE ---
+        # --- FIX NFP SCALE (Bagi 1000 SEBELUM di-print) ---
         if slug == "non_farm_payrolls" and act > 10000:
             act = act / 1000
             if prev > 10000: prev = prev / 1000
             if fcst > 10000: fcst = fcst / 1000
 
         tgl_format = latest['parsed_date'].strftime("%b-%y")
+        
+        print(f"[DEBUG RAW] {display_name} ({tgl_format}): Act={act}, Fcst={fcst}, Prev={prev}")
         
         if act != 0:
             dashboard[display_name] = {
@@ -164,6 +158,7 @@ def get_macro_dashboard():
                 "date": tgl_format
             }
             
+    print(f"[FXMACRO] Berhasil ambil {len(dashboard)} data makro.")
     return dashboard
 
 # ==========================================
