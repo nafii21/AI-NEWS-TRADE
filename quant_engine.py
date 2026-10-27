@@ -1,50 +1,23 @@
 def calculate_surprise_score(actual, forecast, sigma_consensus):
-    """
-    Rumus Standar Institusi: S_t = (A_t - E_t) / Sigma_consensus
-    """
-    if sigma_consensus == 0:
-        return 0.0
-    
+    if sigma_consensus == 0: return 0.0
     s_t = (actual - forecast) / sigma_consensus
     return round(s_t, 2)
 
 def get_historical_sigma(news_title):
-    """
-    Nilai Standar Deviasi (Sigma) historis per jenis berita.
-    Angka ini didapat dari rata-rata deviasi analis terhadap rilis data AS historis.
-    """
     title = news_title.upper()
-    
-    # Tenaga Kerja (Employment)
-    if "NON-FARM" in title or "NFP" in title:
-        return 70.0  # NFP bergerak +/- 70K
-    elif "ADP" in title:
-        return 50.0  # ADP bergerak +/- 50K
-    elif "JOBLESS" in title or "UNEMPLOYMENT" in title:
-        return 15.0  # Jobless Claims +/- 15K
-        
-    # Inflasi (Inflation)
-    elif "CPI" in title or "CONSUMER PRICE" in title:
-        return 0.2   # CPI bergerak +/- 0.2%
-    elif "PPI" in title or "PRODUCER PRICE" in title:
-        return 0.3   # PPI bergerak +/- 0.3%
-        
-    # Suku Bunga & Ekonomi Makro
-    elif "FOMC" in title or "FEDERAL FUNDS" in title:
-        return 25.0  # Biasanya ekspektasi bunga bergerak 25 bps
-    elif "GDP" in title:
-        return 0.5   # GDP bergerak +/- 0.5%
-    elif "RETAIL SALES" in title:
-        return 0.4   # Retail Sales +/- 0.4%
-        
-    # Default kalau berita lain
+    if "NON-FARM" in title or "NFP" in title: return 70.0
+    elif "ADP" in title: return 50.0
+    elif "JOBLESS" in title or "UNEMPLOYMENT" in title: return 15.0
+    elif "CPI" in title or "CONSUMER PRICE" in title: return 0.2
+    elif "PPI" in title or "PRODUCER PRICE" in title: return 0.3
+    elif "PCE" in title: return 0.2
+    elif "AVERAGE HOURLY" in title or "EARNINGS" in title: return 0.1
+    elif "FOMC" in title or "FEDERAL FUNDS" in title: return 25.0
+    elif "GDP" in title: return 0.5
+    elif "RETAIL SALES" in title: return 0.4
     return 1.0
 
 def build_pre_news_quant(news_title, forecast, previous, supporting_data):
-    """
-    Menghitung Pre-News Surprise Score untuk Main News & Data Pendukung.
-    """
-    # 1. Hitung Sigma & Surprise Score untuk Berita Utama (Main Event)
     main_sigma = get_historical_sigma(news_title)
     main_surprise_score = calculate_surprise_score(forecast, previous, main_sigma)
     
@@ -53,17 +26,27 @@ def build_pre_news_quant(news_title, forecast, previous, supporting_data):
         "supporting_analysis": {}
     }
     
-    # 2. Hitung Surprise Score untuk semua Data Pendukung
     for data_name, data_val in supporting_data.items():
         try:
-            f_val = float(data_val['forecast'])
-            p_val = float(data_val['previous'])
+            act_val = float(data_val.get('actual', 0))
+            fcst_val = float(data_val.get('forecast', 0))
+            prev_val = float(data_val.get('previous', 0))
             sup_sigma = get_historical_sigma(data_name)
-            sup_score = calculate_surprise_score(f_val, p_val, sup_sigma)
             
-            # Simpan hasilnya
-            context['supporting_analysis'][data_name] = sup_score
-        except:
-            pass
+            # Jika data sudah rilis (Actual != 0)
+            if act_val != 0:
+                sup_score = calculate_surprise_score(act_val, fcst_val, sup_sigma)
+                desc = f"Actual: {act_val} vs Fcst: {fcst_val}"
+            else:
+                # Jika belum rilis
+                sup_score = calculate_surprise_score(fcst_val, prev_val, sup_sigma)
+                desc = f"Fcst: {fcst_val} vs Prev: {prev_val}"
+                
+            context['supporting_analysis'][data_name] = {
+                "score": sup_score,
+                "desc": desc,
+                "date": data_val.get('date')
+            }
+        except: pass
             
     return context
