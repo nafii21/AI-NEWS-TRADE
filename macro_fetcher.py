@@ -50,16 +50,14 @@ def get_ff_upcoming_events():
     return upcoming
 
 # ==========================================
-# 2. DATA HISTORIS 30 HARI (FXMacroData - Fixed)
+# 2. DATA HISTORIS 30 HARI (FXMacroData - FIXED)
 # ==========================================
 def get_historical_indicator(indicator_slug):
-    """Narik data historis dengan struktur response yang benar"""
     url = f"{FXMACRODATA_BASE}/announcements/usd/{indicator_slug}?limit=30"
     try:
         resp = requests.get(url, timeout=15)
         if resp.status_code == 200:
             data = resp.json()
-            # --- PERBAIKAN: Ambil dari key 'data' ---
             if isinstance(data, dict) and 'data' in data:
                 return data['data']
             elif isinstance(data, list):
@@ -70,7 +68,6 @@ def get_historical_indicator(indicator_slug):
         return []
 
 def get_macro_dashboard():
-    # --- PERBAIKAN: Hanya pakai slug yang VALID di katalog USD ---
     indicators = {
         "inflation": "CPI",
         "core_inflation": "Core CPI",
@@ -88,9 +85,17 @@ def get_macro_dashboard():
             print(f"[DEBUG] Data kosong untuk {slug}")
             continue
             
-        latest = data[0]
-        act = clean_float(latest.get('val'))
-        fcst = clean_float(latest.get('forecast'))
+        # --- PERBAIKAN 1: Urutkan berdasarkan tanggal (Terbaru di atas) ---
+        try:
+            data_sorted = sorted(data, key=lambda x: x.get('date', ''), reverse=True)
+            latest = data_sorted[0]
+        except Exception as e:
+            print(f"[DEBUG] Gagal sorting {slug}: {e}")
+            latest = data[0]
+            
+        # --- PERBAIKAN 2: Ambil key 'consensus' buat forecast ---
+        act = clean_float(latest.get('val') or latest.get('actual'))
+        fcst = clean_float(latest.get('consensus') or latest.get('forecast'))
         prev = clean_float(latest.get('previous'))
         
         if act != 0:
