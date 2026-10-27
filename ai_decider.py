@@ -4,11 +4,12 @@ import json
 import re
 
 def get_ai_decision(news_title, quant_context, market_context):
-    # --- KONFIGURASI SAKELAR ---
     api_key = os.getenv("SAKELAR_API_KEY")
-    url = "https://api.sakelar.web.id/v1"
-    model_name = "deepseek-v4.1-flash"  # Ganti jika dashboard Skailar pakai ID lain
-    # ---------------------------
+    url = "https://api.sakelar.web.id/v1/chat/completions"
+    
+    # --- GANTI NAMA MODEL DI SINI SESUAI DASHBOARD SAKELAR ---
+    model_name = "deepseek-chat" # <--- Coba ganti jadi ini, atau "deepseek-v4.1-flash"
+    # ---------------------------------------------------------
     
     prompt = f"""
     Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD (Gold).
@@ -60,16 +61,13 @@ def get_ai_decision(news_title, quant_context, market_context):
     }
     
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=45).json()
+        response = requests.post(url, json=payload, headers=headers, timeout=45)
+        resp = response.json()
         
+        # --- DEBUGGING: Kalau error, kita cetak respon asli dari Sakelar ---
         if "error" in resp:
             print(f"[SAKELAR ERROR] {resp['error']}")
-            return {
-                "signal": "ERROR",
-                "math_explanation": str(resp["error"]),
-                "confidence": "-",
-                "trade_plan": "-"
-            }
+            return {"signal": "ERROR", "math_explanation": str(resp["error"]), "confidence": "-", "trade_plan": "-"}
             
         raw_content = resp["choices"][0]["message"]["content"]
         clean_json = re.sub(r'```json\n?|```', '', raw_content).strip()
@@ -77,9 +75,4 @@ def get_ai_decision(news_title, quant_context, market_context):
         
     except Exception as e:
         print(f"[SAKELAR EXCEPTION] {e}")
-        return {
-            "signal": "ERROR",
-            "math_explanation": f"Gagal parsing: {e}",
-            "confidence": "-",
-            "trade_plan": "-"
-        }
+        return {"signal": "ERROR", "math_explanation": f"Gagal parsing: {e}", "confidence": "-", "trade_plan": "-"}
