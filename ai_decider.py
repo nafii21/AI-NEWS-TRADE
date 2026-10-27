@@ -14,9 +14,8 @@ def get_ai_decision(news_title, quant_context, market_context):
     [DATA KUANTITATIF UTAMA]
     - Surprise Score Utama (S_t): {quant_context['main_surprise_score']}
     
-    [DASHBOARD DATA MAKRO TERAKHIR]
-    Berikut adalah data indikator ekonomi penting (beserta tanggal rilisnya).
-    Jika ada "Actual", berarti data sudah rilis. Jika tidak ada, lihat Fcst vs Prev.
+    [DASHBOARD DATA MAKRO TERBARU]
+    Ini adalah data Actual dari indikator ekonomi penting yang sudah rilis (30 hari terakhir).
     {json.dumps(quant_context['supporting_analysis'], indent=2)}
     
     [KONDISI MARKET SAAT INI]
@@ -24,13 +23,13 @@ def get_ai_decision(news_title, quant_context, market_context):
     - Perubahan Harga Minyak 5 Hari: {market_context['oil_change_5d_pct']}%
     
     [ATURAN ANALISA]
-    1. DATA YANG SUDAH RILIS (Actual): Actual lebih tinggi dari Forecast = Hawkish (SELL Gold). Actual lebih rendah = Dovish (BUY Gold).
-    2. Cross-check Makro: Jika NFP jelek tapi CPI panas, mana yang lebih penting buat The Fed saat ini? Gunakan logika makro yang sehat.
-    3. Konteks Market: DXY naik + Minyak naik = Konfirmasi kuat Gold mau turun (SELL).
-    4. KHUSUS FOMC: Fokus pada data Inflasi (CPI/PCE) dan Tenaga Kerja (NFP). Tentukan apakah The Fed akan Hawkish atau Dovish berdasarkan dashboard di atas.
+    1. FOKUS PADA ACTUAL: Jika ada data Actual, bandingkan dengan Forecast-nya. Actual > Forecast = Hawkish (SELL Gold). Actual < Forecast = Dovish (BUY Gold).
+    2. CROSS-CHECK: Bagaimana kondisi inflasi (CPI/PCE) dan tenaga kerja (NFP) secara keseluruhan berdasarkan Dashboard? Apakah The Fed akan cenderung Hawkish atau Dovish minggu ini?
+    3. KONTEKS MARKET: DXY naik + Minyak naik = Konfirmasi kuat bias SELL.
+    4. KHUSUS FOMC: Gunakan Dashboard Makro untuk memprediksi nada bicara Powell.
     
     Tugasmu:
-    Gabungkan berita utama, dashboard data makro, dan kondisi market untuk memprediksi arah XAUUSD.
+    Gabungkan berita utama, dashboard data makro (Actual), dan kondisi market untuk memprediksi arah XAUUSD.
     
     Output WAJIB JSON:
     {{
