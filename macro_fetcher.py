@@ -16,7 +16,7 @@ def clean_float(val):
         return 0.0
 
 # ==========================================
-# 1. FUNGSI UNTUK FOREX FACTORY (Jadwal 3 Hari)
+# 1. FOREX FACTORY (Jadwal 3 Hari)
 # ==========================================
 def get_ff_upcoming_events():
     urls = [
@@ -50,7 +50,7 @@ def get_ff_upcoming_events():
     return upcoming
 
 # ==========================================
-# 2. FUNGSI UNTUK FMP (Data Actual 30 Hari)
+# 2. FMP (Data Actual 30 Hari - Stable Endpoint)
 # ==========================================
 def get_fmp_macro_dashboard():
     if not FMP_API_KEY:
@@ -61,21 +61,29 @@ def get_fmp_macro_dashboard():
     from_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
     to_date = today.strftime("%Y-%m-%d")
     
-    url = f"https://financialmodelingprep.com/api/v3/economic_calendar?from={from_date}&to={to_date}&apikey={FMP_API_KEY}"
+    # Ganti URL v3 ke stable
+    url = f"https://financialmodelingprep.com/stable/economic-calendar?from={from_date}&to={to_date}&apikey={FMP_API_KEY}"
+    
     try:
         resp = requests.get(url, timeout=15).json()
+        
+        # Print 200 karakter pertama buat debug di GitHub Actions
+        print(f"[FMP DEBUG] Response: {str(resp)[:200]}")
+        
         if not isinstance(resp, list): 
-            print(f"FMP Error: {resp}")
+            print(f"[FMP ERROR] Format respon bukan list: {resp}")
             return {}
     except Exception as e:
-        print(f"FMP Request Error: {e}")
+        print(f"[FMP REQUEST ERROR] {e}")
         return {}
 
     macro_keywords = ["CPI", "PPI", "PCE", "Non-Farm", "NFP", "ADP", "Unemployment", "GDP", "Retail Sales", "ISM"]
     dashboard = {}
     
     for n in resp:
+        if not isinstance(n, dict): continue
         if n.get('country') not in ['US', 'USD']: continue
+        
         event_name = n.get('event', '')
         is_macro = any(k.lower() in event_name.lower() for k in macro_keywords)
         
@@ -90,6 +98,8 @@ def get_fmp_macro_dashboard():
                         "previous": clean_float(n.get('prev')),
                         "date": date_str
                     }
+                    
+    print(f"[FMP DEBUG] Total data makro yang berhasil diambil: {len(dashboard)}")
     return dashboard
 
 # ==========================================
