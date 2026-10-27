@@ -1,7 +1,7 @@
 name: XAU Live Signal
 
 on:
-  workflow_dispatch: # Tombol manual buat ngejalanin bot
+  workflow_dispatch:
 
 jobs:
   run-live:
@@ -9,25 +9,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          
+
       - name: Install dependencies
         run: pip install -r requirements.txt
-        
+
       - name: Run Live Bot
         run: python main.py
         env:
-          # Kredensial Telegram
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          
-          # API Key Data Pasar & Makro
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           FXMACRODATA_API_KEY: ${{ secrets.FXMACRODATA_API_KEY }}
-          
-          # API Key AI (Sakelar.id / DeepSeek)
-          SAKELAR_API_KEY: ${{ secrets.SAKELAR_API_KEY }}
+          SKAILAR_API_KEY: ${{ secrets.SKAILAR_API_KEY }}
