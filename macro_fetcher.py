@@ -15,78 +15,95 @@ def clean_float(val):
     except:
         return 0.0
 
-def get_fmp_calendar():
-    today = datetime.now(timezone.utc)
-    from_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
-    to_date = (today + timedelta(days=3)).strftime("%Y-%m-%d")
-    
-    url = f"https://financialmodelingprep.com/api/v3/economic_calendar?from={from_date}&to={to_date}&apikey={FMP_API_KEY}"
-    try:
-        resp = requests.get(url, timeout=20).json()
-        
-        # --- PENGAMAN: Cek apakah responnya list (data beneran) atau dict (pesan error) ---
-        if not isinstance(resp, list):
-            print(f"FMP API ERROR: {resp}")
-            return [] 
-            
-        return resp
-    except Exception as e:
-        print(f"Error fetching FMP: {e}")
-        return []
-
-def get_news_and_cluster():
-    calendar = get_fmp_calendar()
-    if not calendar: return []
+# ==========================================
+# 1. FUNGSI UNTUK FOREX FACTORY (Jadwal 3 Hari)
+# ==========================================
+def get_ff_upcoming_events():
+    urls = [
+        "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
+        "https://nfs.faireconomy.media/ff_calendar_nextweek.json"
+    ]
+    calendar = []
+    for url in urls:
+        try:
+            resp = requests.get(url, timeout=10).json()
+            if isinstance(resp, list): calendar.extend(resp)
+        except: pass
     
     wib_tz = timezone(timedelta(hours=7))
     today_wib = datetime.now(wib_tz).date()
     target_dates = [today_wib, today_wib + timedelta(days=1), today_wib + timedelta(days=2)]
     
-    macro_keywords = ["CPI", "PPI", "PCE", "Non-Farm", "NFP", "ADP", "Unemployment", "GDP", "Retail Sales", "ISM"]
-    upcoming_events = []
-    macro_dashboard = {}
-    
+    upcoming = []
     for n in calendar:
-        # Pengaman tambahan: pastikan n itu dictionary
-        if not isinstance(n, dict): continue
+        if n.get('country') != 'USD' or n.get('impact', '').lower() != 'high': continue
+        try:
+            dt_obj = datetime.fromisoformat(n['date'])
+            dt_wib = dt_obj.astimezone(wib_tz)
+            if dt_wib.date() in target_dates:
+                n['wib_time'] = dt_wib.strftime("%H:%M")
+                n['wib_date'] = dt_wib.strftime("%Y-%m-%d")
+                n['forecast'] = clean_float(n.get('forecast'))
+                n['previous'] = clean_float(n.get('previous'))
+                upcoming.append(n)
+        except: continue
+    return upcoming
+
+# ==========================================
+# 2. FUNGSI UNTUK FMP (Data Actual 30 Hari)
+# ==========================================
+def get_fmp_macro_dashboard():
+    if not FMP_API_KEY:
+        print("FMP_API_KEY tidak ditemukan.")
+        return {}
         
-        country = n.get('country', '')
-        if country not in ['US', 'USD']: continue
-        
+    today = datetime.now(timezone.utc)
+    from_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    to_date = today.strftime("%Y-%m-%d")
+    
+    url = f"https://financialmodelingprep.com/api/v3/economic_calendar?from={from_date}&to={to_date}&apikey={FMP_API_KEY}"
+    try:
+        resp = requests.get(url, timeout=15).json()
+        if not isinstance(resp, list): 
+            print(f"FMP Error: {resp}")
+            return {}
+    except Exception as e:
+        print(f"FMP Request Error: {e}")
+        return {}
+
+    macro_keywords = ["CPI", "PPI", "PCE", "Non-Farm", "NFP", "ADP", "Unemployment", "GDP", "Retail Sales", "ISM"]
+    dashboard = {}
+    
+    for n in resp:
+        if n.get('country') not in ['US', 'USD']: continue
         event_name = n.get('event', '')
-        impact = n.get('impact', '')
-        
-        act = clean_float(n.get('actual'))
-        fcst = clean_float(n.get('estimate'))
-        prev = clean_float(n.get('prev'))
-        
-        # 1. Cari Berita Utama (High Impact) untuk 3 hari ke depan
-        if impact == 'High' or impact == 'high':
-            try:
-                dt_obj = datetime.fromisoformat(n['date'])
-                dt_wib = dt_obj.astimezone(wib_tz)
-                if dt_wib.date() in target_dates:
-                    n['wib_time'] = dt_wib.strftime("%H:%M")
-                    n['wib_date'] = dt_wib.strftime("%Y-%m-%d")
-                    n['forecast'] = fcst
-                    n['previous'] = prev
-                    upcoming_events.append(n)
-            except: continue
-            
-        # 2. Kumpulkan Dashboard Makro (Actual terbaru)
         is_macro = any(k.lower() in event_name.lower() for k in macro_keywords)
-        if is_macro and act != 0:
-            date_str = n.get('date', '')[:10]
-            if event_name not in macro_dashboard or date_str > macro_dashboard[event_name]['date']:
-                macro_dashboard[event_name] = {
-                    "actual": act,
-                    "forecast": fcst,
-                    "previous": prev,
-                    "date": date_str
-                }
+        
+        if is_macro:
+            act = clean_float(n.get('actual'))
+            if act != 0: # Cuma simpan yang udah rilis
+                date_str = n.get('date', '')[:10]
+                if event_name not in dashboard or date_str > dashboard[event_name]['date']:
+                    dashboard[event_name] = {
+                        "actual": act,
+                        "forecast": clean_float(n.get('estimate')),
+                        "previous": clean_float(n.get('prev')),
+                        "date": date_str
+                    }
+    return dashboard
 
+# ==========================================
+# 3. GABUNGIN DUA-DUANYA
+# ==========================================
+def get_news_and_cluster():
+    print("Mengambil jadwal berita dari Forex Factory...")
+    upcoming_events = get_ff_upcoming_events()
+    
     if not upcoming_events: return []
-
+    
+    print("Mengambil data Actual dari FMP...")
+    macro_dashboard = get_fmp_macro_dashboard()
+    
     processed_events = []
     for main_event in upcoming_events:
         processed_events.append({
@@ -96,6 +113,9 @@ def get_news_and_cluster():
         
     return processed_events
 
+# ==========================================
+# 4. KONTEKS MARKET (Twelve Data & YF)
+# ==========================================
 def get_twelve_data_gold():
     url = f"https://api.twelvedata.com/quote?symbol=XAU/USD&apikey={TWELVE_DATA_API_KEY}"
     try:
