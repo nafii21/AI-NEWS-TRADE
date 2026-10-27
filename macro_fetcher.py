@@ -56,9 +56,10 @@ def get_ff_upcoming_events():
     return upcoming
 
 # ==========================================
-# 2. AMBIL DATA HISTORIS (Termasuk NFP)
+# 2. AMBIL DATA HISTORIS (Actual & Forecast Join by ID)
 # ==========================================
 def get_historical_indicator(indicator_slug):
+    # A. Ambil Actual & Previous dari /announcements
     url_ann = f"{FXMACRODATA_BASE}/announcements/usd/{indicator_slug}?limit=50"
     data_actual = []
     try:
@@ -70,6 +71,7 @@ def get_historical_indicator(indicator_slug):
     except Exception as e:
         print(f"[FXMACRO ERROR Announcements] {indicator_slug}: {e}")
 
+    # B. Ambil Forecast dari /predictions
     url_pred = f"{FXMACRODATA_BASE}/predictions/usd/{indicator_slug}?prediction_type=market_consensus&pre_release_only=true&limit=50"
     data_pred = []
     try:
@@ -92,8 +94,8 @@ def get_macro_dashboard():
         "pce": "PCE",
         "core_pce": "Core PCE",
         "gdp": "GDP",
-        "non_farm_payrolls": "NFP",          # <--- Tambahan
-        "unemployment_rate": "Unemployment"  # <--- Tambahan
+        "non_farm_payrolls": "NFP",          
+        "unemployment_rate": "Unemployment"  
     }
     
     dashboard = {}
@@ -136,7 +138,13 @@ def get_macro_dashboard():
         ann_id = latest.get('announcement_id')
         fcst = pred_map.get(ann_id, 0.0)
         
-        # Ubah format tanggal jadi "Sep-26" biar lebih enak dibaca
+        # --- FIX NFP SCALE (Bagi 1000 kalau angkanya kegedean) ---
+        if slug == "non_farm_payrolls" and act > 10000:
+            act = act / 1000
+            if prev > 10000: prev = prev / 1000
+            if fcst > 10000: fcst = fcst / 1000
+
+        # Ubah format tanggal jadi "Sep-26"
         tgl_format = latest['parsed_date'].strftime("%b-%y")
         
         print(f"[FXMACRO RAW] {display_name} ({tgl_format}): Act={act}, Fcst={fcst}, Prev={prev}")
@@ -146,7 +154,7 @@ def get_macro_dashboard():
                 "actual": act,
                 "forecast": fcst,
                 "previous": prev,
-                "date": tgl_format # Simpan format baru
+                "date": tgl_format
             }
             
     print(f"[FXMACRO] Berhasil ambil {len(dashboard)} data makro.")
