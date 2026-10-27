@@ -55,11 +55,12 @@ def run_agent():
         ai_signal = decision['signal']
         event_title = main_event['title'].replace("Non-Farm Employment Change", "NFP (Non-Farm Payrolls)")
         
-        # Format skor pendukung
+        # Format skor pendukung (TAMBAH TANGGAL DISINI)
         support_text = ""
         if quant_context['supporting_analysis']:
             for k, v in quant_context['supporting_analysis'].items():
-                support_text += f"  - {k}: {v['desc']} (Skor: {v['score']})\n"
+                tgl = v.get('date', 'Tgl ?') # <--- AMBIL TANGGAL
+                support_text += f"  - {k} ({tgl}): {v['desc']} (Skor: {v['score']})\n"
         else:
             support_text = "  - Tidak ada data pendukung\n"
 
@@ -87,10 +88,8 @@ def run_agent():
         send_telegram(msg)
         print(f"Sinyal {event_title} ({main_event['wib_date']}) terkirim!")
         
-        # Jeda 3 detik biar aman
         time.sleep(3)
         
-    # Footer info market
     market_msg = f"""
 📊 *KONDISI MARKET (Acuan Akhir):*
 - Harga Gold: ${market_context['gold_price']:.2f}
