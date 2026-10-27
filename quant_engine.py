@@ -1,5 +1,4 @@
 def calculate_surprise_score(actual, forecast, sigma_consensus):
-    # JIKA FORECAST 0 ATAU KOSONG, JANGAN HITUNG SKOR
     if sigma_consensus == 0 or forecast == 0: 
         return 0.0
     s_t = (actual - forecast) / sigma_consensus
@@ -35,14 +34,13 @@ def build_pre_news_quant(news_title, forecast, previous, supporting_data):
             prev_val = float(data_val.get('previous', 0))
             sup_sigma = get_historical_sigma(data_name)
             
-            # Jika data Actual ada isinya (bukan 0)
             if act_val != 0:
                 if fcst_val != 0:
                     sup_score = calculate_surprise_score(act_val, fcst_val, sup_sigma)
                     desc = f"Actual: {act_val} vs Fcst: {fcst_val}"
                 else:
                     sup_score = 0.0
-                    desc = f"Actual: {act_val} (Fcst N/A)"
+                    desc = f"Actual: {act_val} (Fcst N/A)" # <--- N/A kalau gak ada forecast
             else:
                 sup_score = calculate_surprise_score(fcst_val, prev_val, sup_sigma)
                 desc = f"Fcst: {fcst_val} vs Prev: {prev_val}"
