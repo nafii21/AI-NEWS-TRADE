@@ -4,8 +4,8 @@ import json
 import re
 
 def get_ai_decision(news_title, quant_context, market_context):
-    # --- KONFIGURASI SKAILAR ---
-    api_key = os.getenv("SKAILAR_API_KEY")
+    # --- KONFIGURASI SAKELAR ---
+    api_key = os.getenv("SAKELAR_API_KEY")
     url = "https://api.sakelar.web.id/v1"
     model_name = "deepseek-v4.1-flash"  # Ganti jika dashboard Skailar pakai ID lain
     # ---------------------------
@@ -63,7 +63,7 @@ def get_ai_decision(news_title, quant_context, market_context):
         resp = requests.post(url, json=payload, headers=headers, timeout=45).json()
         
         if "error" in resp:
-            print(f"[SKAILAR ERROR] {resp['error']}")
+            print(f"[SAKELAR ERROR] {resp['error']}")
             return {
                 "signal": "ERROR",
                 "math_explanation": str(resp["error"]),
@@ -76,7 +76,7 @@ def get_ai_decision(news_title, quant_context, market_context):
         return json.loads(clean_json)
         
     except Exception as e:
-        print(f"[SKAILAR EXCEPTION] {e}")
+        print(f"[SAKELAR EXCEPTION] {e}")
         return {
             "signal": "ERROR",
             "math_explanation": f"Gagal parsing: {e}",
