@@ -11,36 +11,36 @@ def get_ai_decision(news_title, quant_context, market_context):
     Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD.
     Hari ini ada rilis berita utama: {news_title}.
     
-    [DATA KUANTITATIF]
+    [DATA KUANTITATIF UTAMA]
     - Surprise Score Utama (S_t): {quant_context['main_surprise_score']}
-    - Skor Data Pendukung: {json.dumps(quant_context['supporting_analysis'], indent=2)}
+    
+    [DASHBOARD DATA MAKRO TERAKHIR]
+    Berikut adalah data indikator ekonomi penting (beserta tanggal rilisnya).
+    Jika ada "Actual", berarti data sudah rilis. Jika tidak ada, lihat Fcst vs Prev.
+    {json.dumps(quant_context['supporting_analysis'], indent=2)}
     
     [KONDISI MARKET SAAT INI]
     - Perubahan DXY hari ini: {market_context['dxy_change_pct']}%
     - Perubahan Harga Minyak 5 Hari: {market_context['oil_change_5d_pct']}%
     
-    [ATURAN ANALISA DATA PENDUKUNG]
-    1. DATA TENAGA KERJA (ADP, Jobless, NFP): Skor positif = Ekonomi kuat (Hawkish) -> SELL Gold. Skor negatif = Ekonomi lemah (Dovish) -> BUY Gold.
-    2. DATA INFLASI (CPI, PPI, PCE): Skor positif = Inflasi panas (Hawkish) -> SELL Gold. Skor negatif = Inflasi melandai (Dovish) -> BUY Gold.
-    3. UPAH (Average Hourly Earnings, Employment Cost): Skor positif = Daya beli naik, inflasi jasa panas (Hawkish) -> SELL Gold.
-    4. PERMINTAAN (Retail Sales, Consumer Confidence): Skor positif = Konsumen belanja agresif (Demand-Pull Inflation) -> SELL Gold.
-    5. PERTUMBUHAN (GDP): Skor positif = Ekonomi ekspansif (Hawkish) -> SELL Gold.
-    6. KONTEKS MARKET: Jika DXY naik dan Minyak naik, ini konfirmasi kuat pasar lagi diskon Gold (Bearish).
-    7. KHUSUS FOMC: Fokus pada cross-check data pendukung Inflasi dan Tenaga Kerja.
+    [ATURAN ANALISA]
+    1. DATA YANG SUDAH RILIS (Actual): Actual lebih tinggi dari Forecast = Hawkish (SELL Gold). Actual lebih rendah = Dovish (BUY Gold).
+    2. Cross-check Makro: Jika NFP jelek tapi CPI panas, mana yang lebih penting buat The Fed saat ini? Gunakan logika makro yang sehat.
+    3. Konteks Market: DXY naik + Minyak naik = Konfirmasi kuat Gold mau turun (SELL).
+    4. KHUSUS FOMC: Fokus pada data Inflasi (CPI/PCE) dan Tenaga Kerja (NFP). Tentukan apakah The Fed akan Hawkish atau Dovish berdasarkan dashboard di atas.
     
     Tugasmu:
-    Gabungkan berita utama, semua data pendukung di atas, dan kondisi market untuk memprediksi arah XAUUSD.
+    Gabungkan berita utama, dashboard data makro, dan kondisi market untuk memprediksi arah XAUUSD.
     
-    Output WAJIB berupa JSON valid TANPA teks tambahan, TANPA markdown block:
+    Output WAJIB JSON:
     {{
         "signal": "BUY / SELL / NO TRADE",
         "confidence": "High / Medium / Low",
-        "math_explanation": "Jelaskan korelasi angka S_t dengan data pendukung & market",
+        "math_explanation": "Jelaskan bagaimana dashboard data makro mempengaruhi prediksi",
         "trade_plan": "Aksi untuk XAUUSD"
     }}
     """
     
-    # Model pengganti resmi dari Groq
     models = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
     
     for model_name in models:
@@ -65,4 +65,4 @@ def get_ai_decision(news_title, quant_context, market_context):
             print(f"[MODEL {model_name} EXCEPTION] {e}")
             continue
     
-    return {"signal": "ERROR", "math_explanation": "Semua model Groq gagal diakses. Cek limit API.", "confidence": "-", "trade_plan": "-"}
+    return {"signal": "ERROR", "math_explanation": "Semua model Groq gagal diakses.", "confidence": "-", "trade_plan": "-"}
