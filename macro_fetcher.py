@@ -15,65 +15,80 @@ def get_news_and_cluster():
     calendar = get_ff_calendar()
     
     wib_tz = timezone(timedelta(hours=7))
-    today_wib_str = datetime.now(wib_tz).strftime("%Y-%m-%d")
+    today_wib = datetime.now(wib_tz).date()
     
-    today_news = []
+    # Scan untuk hari ini, besok, dan lusa (3 hari)
+    target_dates = [today_wib, today_wib + timedelta(days=1), today_wib + timedelta(days=2)]
+    
+    upcoming_events = []
+    
+    # 1. Cari Berita Utama (High Impact) untuk 3 hari ke depan
     for n in calendar:
-        if n['country'] != 'USD': continue
+        if n['country'] != 'USD' or n['impact'] != 'High': continue
         try:
             dt_obj = datetime.fromisoformat(n['date'])
             dt_wib = dt_obj.astimezone(wib_tz)
-            if dt_wib.strftime("%Y-%m-%d") == today_wib_str:
+            
+            if dt_wib.date() in target_dates:
                 n['wib_time'] = dt_wib.strftime("%H:%M")
-                today_news.append(n)
+                n['wib_date'] = dt_wib.strftime("%Y-%m-%d")
+                n['event_date'] = dt_wib.date()
+                upcoming_events.append(n)
         except:
             continue
+            
+    if not upcoming_events: return []
 
-    main_news = [n for n in today_news if n['impact'] == 'High']
-    if not main_news: return None, None
+    processed_events = []
+    
+    # 2. Untuk setiap berita utama, cari data pendukung di hari yang SAMA
+    for main_event in upcoming_events:
+        main_title = main_event['title']
+        event_date = main_event['event_date']
         
-    main_event = main_news[0]
-    main_title = main_event['title']
-    
-    main_event['forecast'] = float(main_event.get('forecast') or 0)
-    main_event['previous'] = float(main_event.get('previous') or 0)
-    
-    supporting_data = {}
-    
-    # ====================================================
-    # LOGIKA CLUSTERING DATA PENDUKUNG (SUPER LENGKAP)
-    # ====================================================
-    for news in today_news:
-        title = news['title']
-        f_val = float(news.get('forecast') or 0)
-        p_val = float(news.get('previous') or 0)
+        main_event['forecast'] = float(main_event.get('forecast') or 0)
+        main_event['previous'] = float(main_event.get('previous') or 0)
         
-        # 1. Klaster NFP (Tenaga Kerja)
-        if "Non-Farm" in main_title or "NFP" in main_title:
-            if any(k in title for k in ["ADP", "Employment", "Jobless", "Unemployment", "Average Hourly", "Earnings", "Wages"]):
-                supporting_data[title] = {"forecast": f_val, "previous": p_val}
+        supporting_data = {}
+        for news in calendar:
+            if news['country'] != 'USD': continue
+            try:
+                news_dt = datetime.fromisoformat(news['date'])
+                news_wib = news_dt.astimezone(wib_tz)
                 
-        # 2. Klaster CPI (Inflasi - Cost Push, Wage Push, Demand Pull)
-        elif "CPI" in main_title or "Consumer Price" in main_title:
-            if any(k in title for k in ["PPI", "Core", "Wage", "Average Hourly", "Earnings", "Employment Cost", "ISM", "Retail Sales", "Consumer Confidence"]):
-                supporting_data[title] = {"forecast": f_val, "previous": p_val}
+                # Cari data pendukung HANYA di tanggal yang sama dengan berita utama
+                if news_wib.date() != event_date: continue
+                if news['title'] == main_title: continue
+                    
+                title = news['title']
+                f_val = float(news.get('forecast') or 0)
+                p_val = float(news.get('previous') or 0)
                 
-        # 3. Klaster FOMC (Suku Bunga + Inflasi & Tenaga Kerja)
-        elif "FOMC" in main_title or "Federal Funds" in main_title:
-            if any(k in title for k in ["GDP", "Retail Sales", "Non-Farm", "PCE", "CPI", "PPI", "Core", "Employment Cost"]):
-                supporting_data[title] = {"forecast": f_val, "previous": p_val}
+                # Logika Clustering (Sama seperti sebelumnya)
+                if "Non-Farm" in main_title or "NFP" in main_title:
+                    if any(k in title for k in ["ADP", "Employment", "Jobless", "Unemployment", "Average Hourly", "Earnings", "Wages"]):
+                        supporting_data[title] = {"forecast": f_val, "previous": p_val}
+                elif "CPI" in main_title or "Consumer Price" in main_title:
+                    if any(k in title for k in ["PPI", "Core", "Wage", "Average Hourly", "Earnings", "Employment Cost", "ISM", "Retail Sales", "Consumer Confidence"]):
+                        supporting_data[title] = {"forecast": f_val, "previous": p_val}
+                elif "FOMC" in main_title or "Federal Funds" in main_title:
+                    if any(k in title for k in ["GDP", "Retail Sales", "Non-Farm", "PCE", "CPI", "PPI", "Core", "Employment Cost"]):
+                        supporting_data[title] = {"forecast": f_val, "previous": p_val}
+                elif "Retail Sales" in main_title:
+                    if any(k in title for k in ["Core Retail", "Consumer Confidence", "PPI"]):
+                        supporting_data[title] = {"forecast": f_val, "previous": p_val}
+                elif "GDP" in main_title:
+                    if any(k in title for k in ["Trade Balance", "Inventory", "Retail Sales", "Prelim", "Final"]):
+                        supporting_data[title] = {"forecast": f_val, "previous": p_val}
+            except:
+                continue
                 
-        # 4. Klaster Retail Sales (Penjualan Ritel)
-        elif "Retail Sales" in main_title:
-            if any(k in title for k in ["Core Retail", "Consumer Confidence", "PPI"]):
-                supporting_data[title] = {"forecast": f_val, "previous": p_val}
-
-        # 5. Klaster GDP (Pertumbuhan Ekonomi)
-        elif "GDP" in main_title:
-            if any(k in title for k in ["Trade Balance", "Inventory", "Retail Sales", "Prelim", "Final"]):
-                supporting_data[title] = {"forecast": f_val, "previous": p_val}
-                
-    return main_event, supporting_data
+        processed_events.append({
+            "event": main_event,
+            "supporting_data": supporting_data
+        })
+        
+    return processed_events
 
 def get_twelve_data_quote(symbol):
     url = f"https://api.twelvedata.com/quote?symbol={symbol}&apikey={TWELVE_DATA_API_KEY}"
