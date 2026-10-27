@@ -6,7 +6,7 @@ import re
 def get_ai_decision(news_title, quant_context, market_context):
     # --- KONFIGURASI SKAILAR ---
     api_key = os.getenv("SKAILAR_API_KEY")
-    url = "https://api.skailar.com/v1/chat/completions"
+    url = "https://api.sakelar.web.id/v1"
     model_name = "deepseek-v4.1-flash"  # Ganti jika dashboard Skailar pakai ID lain
     # ---------------------------
     
