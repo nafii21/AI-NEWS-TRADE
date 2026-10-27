@@ -8,35 +8,37 @@ def get_ai_decision(news_title, quant_context, market_context):
     url = "https://api.groq.com/openai/v1/chat/completions"
     
     prompt = f"""
-    Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD.
+    Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD (Gold).
     Hari ini ada rilis berita utama: {news_title}.
     
-    [DATA KUANTITATIF UTAMA]
+    [DATA KUANTITATIF]
     - Surprise Score Utama (S_t): {quant_context['main_surprise_score']}
-    
-    [DASHBOARD DATA MAKRO TERBARU]
-    Ini adalah data Actual dari indikator ekonomi penting yang sudah rilis (30 hari terakhir).
-    {json.dumps(quant_context['supporting_analysis'], indent=2)}
+    - Skor Data Pendukung: {json.dumps(quant_context['supporting_analysis'], indent=2)}
     
     [KONDISI MARKET SAAT INI]
     - Perubahan DXY hari ini: {market_context['dxy_change_pct']}%
-    - Perubahan Harga Minyak 5 Hari: {market_context['oil_change_5d_pct']}%
+    - Perubahan Harga Minyak: {market_context['oil_change_5d_pct']}%
     
-    [ATURAN ANALISA]
-    1. FOKUS PADA ACTUAL: Jika ada data Actual, bandingkan dengan Forecast-nya. Actual > Forecast = Hawkish (SELL Gold). Actual < Forecast = Dovish (BUY Gold).
-    2. CROSS-CHECK: Bagaimana kondisi inflasi (CPI/PCE) dan tenaga kerja (NFP) secara keseluruhan berdasarkan Dashboard? Apakah The Fed akan cenderung Hawkish atau Dovish minggu ini?
-    3. KONTEKS MARKET: DXY naik + Minyak naik = Konfirmasi kuat bias SELL.
-    4. KHUSUS FOMC: Gunakan Dashboard Makro untuk memprediksi nada bicara Powell.
+    [ATURAN ANALISA DATA]
+    1. DATA INFLASI (CPI, PPI, PCE): Jika Actual > Forecast, inflasi panas (Hawkish) -> SELL Gold. Jika Actual < Forecast, inflasi melandai (Dovish) -> BUY Gold.
+    2. DATA TENAGA KERJA (NFP, ADP, Unemployment): Jika Actual > Forecast, ekonomi kuat (Hawkish) -> SELL Gold.
+    3. KONTEKS MARKET: Jika DXY naik dan Minyak naik, ini konfirmasi kuat pasar lagi diskon Gold (Bearish).
+    4. KHUSUS FOMC: Fokus pada cross-check data Inflasi dan Tenaga Kerja terbaru. Tentukan apakah The Fed akan Hawkish atau Dovish.
     
     Tugasmu:
-    Gabungkan berita utama, dashboard data makro (Actual), dan kondisi market untuk memprediksi arah XAUUSD.
+    Gabungkan berita utama, dashboard data makro, dan kondisi market untuk memprediksi arah XAUUSD.
     
-    Output WAJIB JSON:
+    ATURAN BAHASA (WAJIB):
+    - Gunakan BAHASA INDONESIA yang baku, profesional, dan mudah dipahami.
+    - Field "math_explanation" dan "trade_plan" WAJIB menggunakan Bahasa Indonesia.
+    - Jelaskan korelasi angka S_t dan data Actual vs Forecast secara logis.
+    
+    Output WAJIB berupa JSON valid TANPA teks tambahan, TANPA markdown block:
     {{
         "signal": "BUY / SELL / NO TRADE",
         "confidence": "High / Medium / Low",
-        "math_explanation": "Jelaskan bagaimana dashboard data makro mempengaruhi prediksi",
-        "trade_plan": "Aksi untuk XAUUSD"
+        "math_explanation": "Jelaskan analisa makro dan korelasi datanya di sini (Bahasa Indonesia)",
+        "trade_plan": "Saran eksekusi trading untuk XAUUSD (Bahasa Indonesia)"
     }}
     """
     
