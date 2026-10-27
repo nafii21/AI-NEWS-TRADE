@@ -15,6 +15,9 @@ def clean_float(val):
     except:
         return 0.0
 
+# ==========================================
+# 1. JADWAL RILIS 3 HARI KE DEPAN (Forex Factory)
+# ==========================================
 def get_ff_upcoming_events():
     urls = [
         "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
@@ -46,20 +49,35 @@ def get_ff_upcoming_events():
         except: continue
     return upcoming
 
+# ==========================================
+# 2. AMBIL DATA HISTORIS (Actual & Forecast Terpisah)
+# ==========================================
 def get_historical_indicator(indicator_slug):
-    url = f"{FXMACRODATA_BASE}/announcements/usd/{indicator_slug}?limit=30"
+    # A. Ambil Actual & Previous dari /announcements
+    url_ann = f"{FXMACRODATA_BASE}/announcements/usd/{indicator_slug}?limit=30"
+    data_actual = []
     try:
-        resp = requests.get(url, timeout=15)
+        resp = requests.get(url_ann, timeout=15)
         if resp.status_code == 200:
             data = resp.json()
             if isinstance(data, dict) and 'data' in data:
-                return data['data']
-            elif isinstance(data, list):
-                return data
-        return []
+                data_actual = data['data']
     except Exception as e:
-        print(f"[FXMACRO ERROR] {indicator_slug}: {e}")
-        return []
+        print(f"[FXMACRO ERROR Announcements] {indicator_slug}: {e}")
+
+    # B. Ambil Forecast dari /predictions
+    url_pred = f"{FXMACRODATA_BASE}/predictions/usd/{indicator_slug}?prediction_type=market_consensus&limit=30"
+    data_pred = []
+    try:
+        resp = requests.get(url_pred, timeout=15)
+        if resp.status_code == 200:
+            data = resp.json()
+            if isinstance(data, dict) and 'data' in data:
+                data_pred = data['data']
+    except Exception as e:
+        print(f"[FXMACRO ERROR Predictions] {indicator_slug}: {e}")
+        
+    return data_actual, data_pred
 
 def get_macro_dashboard():
     indicators = {
@@ -72,37 +90,62 @@ def get_macro_dashboard():
     }
     
     dashboard = {}
+    today = datetime.now().date()
     
     for slug, display_name in indicators.items():
-        data = get_historical_indicator(slug)
-        if not data:
-            print(f"[DEBUG] Data kosong untuk {slug}")
+        actuals, predictions = get_historical_indicator(slug)
+        
+        if not actuals:
             continue
             
-        try:
-            data_sorted = sorted(data, key=lambda x: x.get('date', ''), reverse=True)
-            latest = data_sorted[0]
-        except Exception as e:
-            latest = data[0]
+        # Bikin mapping prediksi berdasarkan tanggal biar gampang dicocokin
+        pred_map = {}
+        for p in predictions:
+            # Ambil predicted_value dari list prediksi (biasanya yang pertama)
+            preds = p.get('predictions', [])
+            if preds and len(preds) > 0:
+                pred_map[p.get('date')] = clean_float(preds[0].get('predicted_value'))
+                
+        # Filter actual yang udah rilis & urutkan
+        valid_data = []
+        for item in actuals:
+            date_str = item.get('date', '')[:10]
+            try:
+                item_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                if item_date <= today:
+                    item['parsed_date'] = item_date
+                    item['date_str'] = date_str
+                    valid_data.append(item)
+            except:
+                continue
+                
+        if not valid_data:
+            continue
             
-        # --- PERBAIKAN: Cek semua kemungkinan nama key buat Forecast ---
-        act = clean_float(latest.get('val') or latest.get('actual') or latest.get('value'))
-        fcst = clean_float(latest.get('consensus') or latest.get('forecast') or latest.get('forecast_value') or latest.get('estimate'))
-        prev = clean_float(latest.get('previous') or latest.get('prev'))
+        valid_data.sort(key=lambda x: x['parsed_date'], reverse=True)
+        latest = valid_data[0]
         
-        # Print buat mastiin di log GitHub
-        print(f"[FXMACRO DEBUG] {display_name} | Act: {act} | Fcst: {fcst} | Date: {latest.get('date')}")
+        act = clean_float(latest.get('val'))
+        prev = clean_float(latest.get('previous_value'))
+        # Cocokin forecast berdasarkan tanggal rilis actual
+        fcst = pred_map.get(latest.get('date_str'), 0.0)
+        
+        print(f"[FXMACRO RAW] {display_name} ({latest.get('date_str')}): Act={act}, Fcst={fcst}, Prev={prev}")
         
         if act != 0:
             dashboard[display_name] = {
                 "actual": act,
                 "forecast": fcst,
                 "previous": prev,
-                "date": latest.get('date', '')[:10]
+                "date": latest.get('date_str')
             }
             
+    print(f"[FXMACRO] Berhasil ambil {len(dashboard)} data makro.")
     return dashboard
 
+# ==========================================
+# 3. GABUNGIN JADWAL & DATA HISTORIS
+# ==========================================
 def get_news_and_cluster():
     print("Mengambil jadwal berita dari Forex Factory...")
     upcoming_events = get_ff_upcoming_events()
@@ -110,7 +153,7 @@ def get_news_and_cluster():
     if not upcoming_events: 
         return []
     
-    print("Mengambil data Actual dari FXMacroData...")
+    print("Mengambil data Actual & Forecast dari FXMacroData...")
     macro_dashboard = get_macro_dashboard()
     
     processed_events = []
@@ -122,6 +165,9 @@ def get_news_and_cluster():
         
     return processed_events
 
+# ==========================================
+# 4. KONTEKS MARKET
+# ==========================================
 def get_twelve_data_gold():
     url = f"https://api.twelvedata.com/quote?symbol=XAU/USD&apikey={TWELVE_DATA_API_KEY}"
     try:
