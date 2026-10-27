@@ -1,6 +1,6 @@
 import os
 import requests
-import time # <--- TAMBAHAN BUAT JEDA
+import time
 from datetime import datetime
 from macro_fetcher import get_news_and_cluster, get_market_context
 from quant_engine import build_pre_news_quant
@@ -9,16 +9,12 @@ from ai_decider import get_ai_decision
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# Fungsi kirim telegram yang lebih kebal error
 def send_telegram(msg):
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID: return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     try:
-        # Coba kirim pake Markdown
         resp = requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "Markdown"}, timeout=10)
         if resp.status_code != 200:
-            # Kalau gagal (karena karakter aneh), kirim pake teks biasa
-            print("Gagal Markdown, kirim teks biasa...")
             requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID, "text": msg}, timeout=10)
     except Exception as e:
         print(f"Error Telegram: {e}")
@@ -31,7 +27,7 @@ def run_agent():
     
     if not processed_events:
         print("Tidak ada berita High Impact USD untuk 3 hari ke depan.")
-        send_telegram(f"🔍 *Hasil Pengecekan ({today_date}):*\nTidak ada berita High Impact USD untuk 3 hari ke depan.")
+        send_telegram(f"🔍 *Hasil Pengecekan ({today_date}):*\nTidak ada berita High Impact USD untuk 3 hari ke depan. Bot standby.")
         return
 
     market_context = get_market_context()
@@ -59,32 +55,44 @@ def run_agent():
         ai_signal = decision['signal']
         event_title = main_event['title'].replace("Non-Farm Employment Change", "NFP (Non-Farm Payrolls)")
         
+        # Format skor pendukung
+        support_text = ""
+        if quant_context['supporting_analysis']:
+            for k, v in quant_context['supporting_analysis'].items():
+                support_text += f"  - {k}: {v['desc']} (Skor: {v['score']})\n"
+        else:
+            support_text = "  - Tidak ada data pendukung\n"
+
         msg = f"""
-🌍 *MACRO QUANT PREDICTION (LIVE)*
+🌍 *PREDIKSI MACRO QUANT (LIVE)*
 📆 Tanggal Rilis: {main_event['wib_date']}
 📅 Event: {event_title}
 ⏰ Jam: {main_event['wib_time']} WIB
 📊 Forecast: {main_event['forecast']} | Prev: {main_event['previous']}
 
-🧮 *Surprise Score (S_t): {quant_context['main_surprise_score']}*
-📉 *Skor Pendukung:*
-{chr(10).join([f"- {k}: {v}" for k, v in quant_context['supporting_analysis'].items()]) if quant_context['supporting_analysis'] else "- Tidak ada data pendukung"}
+🧮 *Skor Kejutan (S_t): {quant_context['main_surprise_score']}*
+📉 *Data Makro Pendukung:*
+{support_text}
+🌍 *Kondisi Market Saat Ini:*
+- Harga Gold: ${market_context['gold_price']:.2f}
+- DXY: {market_context['dxy_change_pct']}%
+- Minyak: {market_context['oil_change_5d_pct']}%
 
-🎯 *PREDIKSI: {decision['signal']}*
-🔥 Confidence: {decision['confidence']}
-🧠 Logika: {decision['math_explanation']}
+🎯 *PREDIKSI AI: {decision['signal']}*
+🔥 Tingkat Keyakinan: {decision['confidence']}
+🧠 Alasan Logis: {decision['math_explanation']}
 
 💡 *Saran Eksekusi:* {decision['trade_plan']}
 """
         send_telegram(msg)
         print(f"Sinyal {event_title} ({main_event['wib_date']}) terkirim!")
         
-        # JEDA 3 DETIK BIAR GROQ & TELEGRAM GAK KEWALAHAN
+        # Jeda 3 detik biar aman
         time.sleep(3)
         
-    # Footer info market saat ini
+    # Footer info market
     market_msg = f"""
-📊 *KONDISI MARKET SAAT INI (Acuan):*
+📊 *KONDISI MARKET (Acuan Akhir):*
 - Harga Gold: ${market_context['gold_price']:.2f}
 - DXY: {market_context['dxy_change_pct']}%
 - Minyak: {market_context['oil_change_5d_pct']}%
