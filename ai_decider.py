@@ -20,10 +20,10 @@ def get_ai_decision(news_title, quant_context, market_context):
     - Perubahan Harga Minyak: {market_context['oil_change_5d_pct']}%
     
     [ATURAN ANALISA DATA]
-    1. DATA INFLASI (CPI, PPI, PCE): Jika Actual > Forecast, inflasi panas (Hawkish) -> SELL Gold. Jika Actual < Forecast, inflasi melandai (Dovish) -> BUY Gold.
-    2. DATA TENAGA KERJA (NFP, ADP, Unemployment): Jika Actual > Forecast, ekonomi kuat (Hawkish) -> SELL Gold.
-    3. KONTEKS MARKET: Jika DXY naik dan Minyak naik, ini konfirmasi kuat pasar lagi diskon Gold (Bearish).
-    4. KHUSUS FOMC: Fokus pada cross-check data Inflasi dan Tenaga Kerja terbaru. Tentukan apakah The Fed akan Hawkish atau Dovish.
+    1. Jika Forecast bernilai 0 atau "N/A", ABAIKAN perbandingan Actual vs Forecast. Fokus pada nilai Actual dan bandingkan dengan kondisi ekonomi secara umum.
+    2. DATA INFLASI (CPI, PPI, PCE): Jika Actual tinggi (>3%), inflasi panas (Hawkish) -> SELL Gold. 
+    3. DATA TENAGA KERJA (NFP, ADP, Unemployment): Jika Actual kuat, ekonomi solid (Hawkish) -> SELL Gold.
+    4. KONTEKS MARKET: Jika DXY naik dan Minyak naik, konfirmasi kuat Gold turun (Bearish).
     
     Tugasmu:
     Gabungkan berita utama, dashboard data makro, dan kondisi market untuk memprediksi arah XAUUSD.
@@ -31,7 +31,6 @@ def get_ai_decision(news_title, quant_context, market_context):
     ATURAN BAHASA (WAJIB):
     - Gunakan BAHASA INDONESIA yang baku, profesional, dan mudah dipahami.
     - Field "math_explanation" dan "trade_plan" WAJIB menggunakan Bahasa Indonesia.
-    - Jelaskan korelasi angka S_t dan data Actual vs Forecast secara logis.
     
     Output WAJIB berupa JSON valid TANPA teks tambahan, TANPA markdown block:
     {{
