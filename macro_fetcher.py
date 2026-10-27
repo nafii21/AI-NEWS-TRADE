@@ -5,13 +5,7 @@ import pandas as pd
 from datetime import datetime, timezone, timedelta
 
 TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
-
-def get_ff_calendar():
-    url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
-    try:
-        return requests.get(url).json()
-    except:
-        return []
+FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
 
 def clean_float(val):
     if val is None or val == "": return 0.0
@@ -21,80 +15,81 @@ def clean_float(val):
     except:
         return 0.0
 
+def get_finnhub_calendar():
+    """Narik kalender ekonomi dari 30 hari lalu sampai 3 hari ke depan"""
+    today = datetime.now()
+    start_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    end_date = (today + timedelta(days=3)).strftime("%Y-%m-%d")
+    
+    url = f"https://finnhub.io/api/v1/calendar/economic?from={start_date}&to={end_date}&token={FINNHUB_API_KEY}"
+    try:
+        resp = requests.get(url, timeout=15).json()
+        return resp.get("economicCalendar", [])
+    except:
+        return []
+
 def get_news_and_cluster():
-    calendar = get_ff_calendar()
+    calendar = get_finnhub_calendar()
     
     wib_tz = timezone(timedelta(hours=7))
     today_wib = datetime.now(wib_tz).date()
     
     target_dates = [today_wib, today_wib + timedelta(days=1), today_wib + timedelta(days=2)]
+    
+    # Indikator Makro Utama yang WAJIB dilacak
+    macro_keywords = [
+        "CPI", "PPI", "PCE", "Non-Farm", "NFP", "ADP", 
+        "Unemployment", "GDP", "Retail Sales", "ISM"
+    ]
+    
+    # 1. Kumpulkan semua data historis & data masa depan
+    macro_dashboard = {}
     upcoming_events = []
     
-    # 1. Cari Berita Utama (High Impact) untuk 3 hari ke depan
     for n in calendar:
-        if n['country'] != 'USD' or n['impact'] != 'High': continue
-        try:
-            dt_obj = datetime.fromisoformat(n['date'])
-            dt_wib = dt_obj.astimezone(wib_tz)
+        if n.get('country') != 'US': continue
+        event_name = n.get('event', '')
+        impact = n.get('impact', '').lower()
+        
+        # Simpan data masa depan untuk Fase 1
+        if impact == 'high':
+            try:
+                dt_obj = datetime.fromisoformat(n['date'] + 'T' + n.get('time', '00:00:00'))
+                dt_wib = dt_obj.astimezone(wib_tz)
+                if dt_wib.date() in target_dates:
+                    n['wib_time'] = dt_wib.strftime("%H:%M")
+                    n['wib_date'] = dt_wib.strftime("%Y-%m-%d")
+                    n['forecast'] = clean_float(n.get('estimate'))
+                    n['previous'] = clean_float(n.get('prev'))
+                    upcoming_events.append(n)
+            except:
+                continue
+                
+        # Simpan semua data makro terbaru ke Dashboard
+        is_macro = any(k.lower() in event_name.lower() for k in macro_keywords)
+        if is_macro:
+            act = clean_float(n.get('actual'))
+            fcst = clean_float(n.get('estimate'))
+            prev = clean_float(n.get('prev'))
             
-            if dt_wib.date() in target_dates:
-                n['wib_time'] = dt_wib.strftime("%H:%M")
-                n['wib_date'] = dt_wib.strftime("%Y-%m-%d")
-                n['event_date'] = dt_wib.date()
-                n['forecast'] = clean_float(n.get('forecast'))
-                n['previous'] = clean_float(n.get('previous'))
-                upcoming_events.append(n)
-        except:
-            continue
-            
+            # Kalo datanya lebih baru, timpa yang lama
+            if event_name not in macro_dashboard or n['date'] > macro_dashboard[event_name]['date']:
+                macro_dashboard[event_name] = {
+                    "actual": act,
+                    "forecast": fcst,
+                    "previous": prev,
+                    "date": n['date']
+                }
+
     if not upcoming_events: return []
 
     processed_events = []
     
-    # Daftar Indikator Makro Utama (Dashboard Ekonomi)
-    macro_keywords = [
-        "CPI", "Core CPI", "PPI", "Core PPI", "PCE", "Core PCE",
-        "Non-Farm", "ADP", "Unemployment", "Jobless", "Average Hourly",
-        "GDP", "Retail Sales", "ISM", "PMI"
-    ]
-    
+    # 2. Gabungkan Berita Utama dengan Dashboard Makro terbaru
     for main_event in upcoming_events:
-        main_title = main_event['title']
-        supporting_data = {}
-        
-        # 2. Cari data makro terbaru untuk semua indikator penting
-        for news in calendar:
-            if news['country'] != 'USD': continue
-            
-            title = news['title']
-            # Cek apakah termasuk indikator penting
-            is_macro = any(k.lower() in title.lower() for k in macro_keywords)
-            if not is_macro: continue
-            
-            # Skip berita utama agar tidak duplikat
-            if title == main_title: continue
-            
-            try:
-                news_dt = datetime.fromisoformat(news['date'])
-                news_wib = news_dt.astimezone(wib_tz)
-                
-                act = clean_float(news.get('actual'))
-                fcst = clean_float(news.get('forecast'))
-                prev = clean_float(news.get('previous'))
-                
-                # Simpan data terbaru. (Karena di-loop dari awal minggu, data paling akhir akan menimpa data lama)
-                supporting_data[title] = {
-                    "actual": act,
-                    "forecast": fcst,
-                    "previous": prev,
-                    "date": news_wib.strftime("%Y-%m-%d")
-                }
-            except:
-                continue
-                
         processed_events.append({
             "event": main_event,
-            "supporting_data": supporting_data
+            "supporting_data": macro_dashboard
         })
         
     return processed_events
