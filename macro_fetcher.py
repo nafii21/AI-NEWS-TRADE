@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime, timezone, timedelta
 
 TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
-FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
+FMP_API_KEY = os.getenv("FMP_API_KEY")
 
 def clean_float(val):
     if val is None or val == "": return 0.0
@@ -15,77 +15,73 @@ def clean_float(val):
     except:
         return 0.0
 
-def get_finnhub_calendar():
-    """Narik kalender ekonomi dari 30 hari lalu sampai 3 hari ke depan"""
-    today = datetime.now()
-    start_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
-    end_date = (today + timedelta(days=3)).strftime("%Y-%m-%d")
+def get_fmp_calendar():
+    """Narik kalender ekonomi dari 30 hari lalu sampai 3 hari ke depan dari FMP"""
+    today = datetime.now(timezone.utc)
+    from_date = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    to_date = (today + timedelta(days=3)).strftime("%Y-%m-%d")
     
-    url = f"https://finnhub.io/api/v1/calendar/economic?from={start_date}&to={end_date}&token={FINNHUB_API_KEY}"
+    # FMP free tier mendukung parameter from & to, plus filter country
+    url = f"https://financialmodelingprep.com/api/v3/economic_calendar?from={from_date}&to={to_date}&apikey={FMP_API_KEY}"
     try:
-        resp = requests.get(url, timeout=15).json()
-        return resp.get("economicCalendar", [])
-    except:
+        resp = requests.get(url, timeout=20).json()
+        return resp
+    except Exception as e:
+        print(f"Error fetching FMP: {e}")
         return []
 
 def get_news_and_cluster():
-    calendar = get_finnhub_calendar()
+    calendar = get_fmp_calendar()
+    if not calendar: return []
     
     wib_tz = timezone(timedelta(hours=7))
     today_wib = datetime.now(wib_tz).date()
-    
     target_dates = [today_wib, today_wib + timedelta(days=1), today_wib + timedelta(days=2)]
     
-    # Indikator Makro Utama yang WAJIB dilacak
-    macro_keywords = [
-        "CPI", "PPI", "PCE", "Non-Farm", "NFP", "ADP", 
-        "Unemployment", "GDP", "Retail Sales", "ISM"
-    ]
-    
-    # 1. Kumpulkan semua data historis & data masa depan
-    macro_dashboard = {}
+    macro_keywords = ["CPI", "PPI", "PCE", "Non-Farm", "NFP", "ADP", "Unemployment", "GDP", "Retail Sales", "ISM"]
     upcoming_events = []
+    macro_dashboard = {}
     
     for n in calendar:
-        if n.get('country') != 'US': continue
-        event_name = n.get('event', '')
-        impact = n.get('impact', '').lower()
+        country = n.get('country', '')
+        if country not in ['US', 'USD']: continue
         
-        # Simpan data masa depan untuk Fase 1
-        if impact == 'high':
+        event_name = n.get('event', '')
+        impact = n.get('impact', '')
+        
+        # FMP menyediakan data Actual untuk event yang sudah rilis
+        act = clean_float(n.get('actual'))
+        fcst = clean_float(n.get('estimate'))
+        prev = clean_float(n.get('prev'))
+        
+        # 1. Cari Berita Utama (High Impact) untuk 3 hari ke depan
+        if impact == 'High' or impact == 'high':
             try:
-                dt_obj = datetime.fromisoformat(n['date'] + 'T' + n.get('time', '00:00:00'))
+                dt_obj = datetime.fromisoformat(n['date'])
                 dt_wib = dt_obj.astimezone(wib_tz)
                 if dt_wib.date() in target_dates:
                     n['wib_time'] = dt_wib.strftime("%H:%M")
                     n['wib_date'] = dt_wib.strftime("%Y-%m-%d")
-                    n['forecast'] = clean_float(n.get('estimate'))
-                    n['previous'] = clean_float(n.get('prev'))
+                    n['forecast'] = fcst
+                    n['previous'] = prev
                     upcoming_events.append(n)
-            except:
-                continue
-                
-        # Simpan semua data makro terbaru ke Dashboard
-        is_macro = any(k.lower() in event_name.lower() for k in macro_keywords)
-        if is_macro:
-            act = clean_float(n.get('actual'))
-            fcst = clean_float(n.get('estimate'))
-            prev = clean_float(n.get('prev'))
+            except: continue
             
-            # Kalo datanya lebih baru, timpa yang lama
-            if event_name not in macro_dashboard or n['date'] > macro_dashboard[event_name]['date']:
+        # 2. Kumpulkan Dashboard Makro (Actual terbaru)
+        is_macro = any(k.lower() in event_name.lower() for k in macro_keywords)
+        if is_macro and act != 0:
+            date_str = n.get('date', '')[:10]
+            if event_name not in macro_dashboard or date_str > macro_dashboard[event_name]['date']:
                 macro_dashboard[event_name] = {
                     "actual": act,
                     "forecast": fcst,
                     "previous": prev,
-                    "date": n['date']
+                    "date": date_str
                 }
 
     if not upcoming_events: return []
 
     processed_events = []
-    
-    # 2. Gabungkan Berita Utama dengan Dashboard Makro terbaru
     for main_event in upcoming_events:
         processed_events.append({
             "event": main_event,
