@@ -50,43 +50,47 @@ def get_ff_upcoming_events():
     return upcoming
 
 # ==========================================
-# 2. DATA HISTORIS 30 HARI (FXMacroData)
+# 2. DATA HISTORIS 30 HARI (FXMacroData - Fixed)
 # ==========================================
 def get_historical_indicator(indicator_slug):
+    """Narik data historis dengan struktur response yang benar"""
     url = f"{FXMACRODATA_BASE}/announcements/usd/{indicator_slug}?limit=30"
     try:
         resp = requests.get(url, timeout=15)
         if resp.status_code == 200:
             data = resp.json()
-            if isinstance(data, list): return data
-            elif isinstance(data, dict) and 'data' in data: return data['data']
+            # --- PERBAIKAN: Ambil dari key 'data' ---
+            if isinstance(data, dict) and 'data' in data:
+                return data['data']
+            elif isinstance(data, list):
+                return data
         return []
     except Exception as e:
         print(f"[FXMACRO ERROR] {indicator_slug}: {e}")
         return []
 
 def get_macro_dashboard():
+    # --- PERBAIKAN: Hanya pakai slug yang VALID di katalog USD ---
     indicators = {
         "inflation": "CPI",
         "core_inflation": "Core CPI",
         "ppi": "PPI",
+        "pce": "PCE",
         "core_pce": "Core PCE",
-        "non_farm_payrolls": "NFP",
-        "unemployment": "Unemployment",
-        "gdp": "GDP",
-        "retail_sales": "Retail Sales",
-        "average_hourly_earnings": "AHE"
+        "gdp": "GDP"
     }
     
     dashboard = {}
     
     for slug, display_name in indicators.items():
         data = get_historical_indicator(slug)
-        if not data: continue
+        if not data:
+            print(f"[DEBUG] Data kosong untuk {slug}")
+            continue
             
         latest = data[0]
-        act = clean_float(latest.get('value') or latest.get('actual'))
-        fcst = clean_float(latest.get('forecast') or latest.get('consensus'))
+        act = clean_float(latest.get('val'))
+        fcst = clean_float(latest.get('forecast'))
         prev = clean_float(latest.get('previous'))
         
         if act != 0:
