@@ -1,6 +1,7 @@
 import os
 import requests
 import yfinance as yf
+import pandas as pd # <--- TAMBAHAN
 from datetime import datetime, timezone, timedelta
 
 TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
@@ -26,7 +27,6 @@ def get_news_and_cluster():
     wib_tz = timezone(timedelta(hours=7))
     today_wib = datetime.now(wib_tz).date()
     
-    # Scan 3 hari ke depan (Hari ini, Besok, Lusa)
     target_dates = [today_wib, today_wib + timedelta(days=1), today_wib + timedelta(days=2)]
     
     upcoming_events = []
@@ -96,7 +96,6 @@ def get_news_and_cluster():
     return processed_events
 
 def get_twelve_data_gold():
-    # Ambil harga Gold dari Twelve Data
     url = f"https://api.twelvedata.com/quote?symbol=XAU/USD&apikey={TWELVE_DATA_API_KEY}"
     try:
         resp = requests.get(url, timeout=10).json()
@@ -107,28 +106,29 @@ def get_twelve_data_gold():
     return 0.0
 
 def get_market_context():
-    # 1. Gold dari Twelve Data
     gold_price = get_twelve_data_gold()
     
-    # 2. DXY & Minyak dari yfinance (karena Twelve Data limitasi simbol)
+    dxy_change = 0.0
+    oil_change = 0.0
+    
     try:
-        # DXY (Daily change)
+        # --- DXY ---
         dxy = yf.download("DX-Y.NYB", period="5d", interval="1d", progress=False)
         if not dxy.empty:
-            dxy_change = ((dxy['Close'].iloc[-1] - dxy['Close'].iloc[-2]) / dxy['Close'].iloc[-2]) * 100
-        else:
-            dxy_change = 0.0
-            
-        # Minyak (Daily change 5 hari)
+            if isinstance(dxy.columns, pd.MultiIndex): # <--- FIX MULTIINDEX
+                dxy.columns = dxy.columns.get_level_values(0)
+            if len(dxy) > 1:
+                dxy_change = ((dxy['Close'].iloc[-1] - dxy['Close'].iloc[-2]) / dxy['Close'].iloc[-2]) * 100
+        
+        # --- Minyak (5 hari) ---
         oil = yf.download("CL=F", period="10d", interval="1d", progress=False)
-        if len(oil) >= 5:
-            oil_change = ((oil['Close'].iloc[-1] - oil['Close'].iloc[-5]) / oil['Close'].iloc[-5]) * 100
-        else:
-            oil_change = 0.0
+        if not oil.empty:
+            if isinstance(oil.columns, pd.MultiIndex): # <--- FIX MULTIINDEX
+                oil.columns = oil.columns.get_level_values(0)
+            if len(oil) >= 5:
+                oil_change = ((oil['Close'].iloc[-1] - oil['Close'].iloc[-5]) / oil['Close'].iloc[-5]) * 100
     except Exception as e:
         print(f"Error yfinance: {e}")
-        dxy_change = 0.0
-        oil_change = 0.0
     
     return {
         "dxy_change_pct": round(float(dxy_change), 2),
