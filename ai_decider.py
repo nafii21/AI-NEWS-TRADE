@@ -6,10 +6,7 @@ import re
 def get_ai_decision(news_title, quant_context, market_context):
     api_key = os.getenv("SAKELAR_API_KEY")
     url = "https://api.sakelar.web.id/v1/chat/completions"
-    
-    # --- GANTI NAMA MODEL DI SINI SESUAI DASHBOARD SAKELAR ---
-    model_name = "deepseek-v4.1-flash" # <--- Coba ganti jadi ini, atau "deepseek-v4.1-flash"
-    # ---------------------------------------------------------
+    model_name = "deepseek-flash"
     
     prompt = f"""
     Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD (Gold).
@@ -23,24 +20,25 @@ def get_ai_decision(news_title, quant_context, market_context):
     - Perubahan DXY hari ini: {market_context['dxy_change_pct']}%
     - Perubahan Harga Minyak: {market_context['oil_change_5d_pct']}%
     
-    [ATURAN ANALISA DATA]
-    1. Jika Forecast bernilai 0 atau "N/A", ABAIKAN perbandingan Actual vs Forecast. Fokus pada nilai Actual dan bandingkan dengan kondisi ekonomi secara umum.
-    2. DATA INFLASI (CPI, PPI, PCE): Jika Actual tinggi (>3%), inflasi panas (Hawkish) -> SELL Gold. 
-    3. DATA TENAGA KERJA (NFP, ADP, Unemployment): Jika Actual kuat, ekonomi solid (Hawkish) -> SELL Gold.
-    4. KONTEKS MARKET: Jika DXY naik dan Minyak naik, konfirmasi kuat Gold turun (Bearish).
+    [SOP PRIORITAS ANALISA - WAJIB DIPATUHI]
+    1. DILARANG KERAS memilih "NO TRADE" kecuali semua data benar-benar 0.0 (tidak ada data). Kamu HARUS memilih BUY atau SELL.
+    2. Jika data campur aduk (ada Hawkish dan Dovish), IKUTI PRIORITAS THE FED: 
+       - Inflasi (CPI, PPI, Core PCE) adalah RAJA. Jika inflasi panas (Skor Positif > 0.5), abaikan data tenaga kerja yang lemah, kamu WAJIB pilih SELL.
+       - Jika Inflasi dingin (Skor Negatif < -0.5), abaikan data tenaga kerja yang kuat, kamu WAJIB pilih BUY.
+    3. Data Tenaga Kerja (NFP, ADP, AHE) hanya dipakai sebagai penentu arah jika data Inflasi netral atau tidak ada.
+    4. KONTEKS MARKET: DXY naik = konfirmasi SELL. DXY turun = konfirmasi BUY. Minyak naik = inflasi naik = SELL.
     
     Tugasmu:
-    Gabungkan berita utama, dashboard data makro, dan kondisi market untuk memprediksi arah XAUUSD.
+    Tentukan arah XAUUSD dengan tegas (BUY/SELL) berdasarkan SOP Prioritas di atas.
     
-    ATURAN BAHASA (WAJIB):
-    - Gunakan BAHASA INDONESIA yang baku, profesional, dan mudah dipahami.
-    - Field "math_explanation" dan "trade_plan" WAJIB menggunakan Bahasa Indonesia.
+    ATURAN BAHASA:
+    Gunakan BAHASA INDONESIA yang baku dan profesional.
     
-    Output WAJIB berupa JSON valid TANPA teks tambahan, TANPA markdown block:
+    Output WAJIB JSON:
     {{
-        "signal": "BUY / SELL / NO TRADE",
+        "signal": "BUY / SELL",
         "confidence": "High / Medium / Low",
-        "math_explanation": "Jelaskan analisa makro dan korelasi datanya di sini (Bahasa Indonesia)",
+        "math_explanation": "Jelaskan analisa kamu berdasarkan SOP Prioritas (misal: Inflasi panas, maka SELL)",
         "trade_plan": "Saran eksekusi trading untuk XAUUSD (Bahasa Indonesia)"
     }}
     """
@@ -48,7 +46,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     payload = {
         "model": model_name,
         "messages": [
-            {"role": "system", "content": "Kamu adalah analis makro profesional yang hanya membalas dengan JSON valid."},
+            {"role": "system", "content": "Kamu adalah analis makro profesional yang tegas dan hanya membalas dengan JSON valid."},
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.3,
@@ -64,7 +62,6 @@ def get_ai_decision(news_title, quant_context, market_context):
         response = requests.post(url, json=payload, headers=headers, timeout=45)
         resp = response.json()
         
-        # --- DEBUGGING: Kalau error, kita cetak respon asli dari Sakelar ---
         if "error" in resp:
             print(f"[SAKELAR ERROR] {resp['error']}")
             return {"signal": "ERROR", "math_explanation": str(resp["error"]), "confidence": "-", "trade_plan": "-"}
