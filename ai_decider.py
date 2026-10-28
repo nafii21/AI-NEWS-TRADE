@@ -22,11 +22,12 @@ def get_ai_decision(news_title, quant_context, market_context):
     
     [SOP PRIORITAS ANALISA - WAJIB DIPATUHI]
     1. DILARANG KERAS memilih "NO TRADE" kecuali semua data benar-benar 0.0 (tidak ada data). Kamu HARUS memilih BUY atau SELL.
-    2. Jika data campur aduk (ada Hawkish dan Dovish), IKUTI PRIORITAS THE FED: 
-       - Inflasi (CPI, PPI, Core PCE) adalah RAJA. Jika inflasi panas (Skor Positif > 0.5), abaikan data tenaga kerja yang lemah, kamu WAJIB pilih SELL.
-       - Jika Inflasi dingin (Skor Negatif < -0.5), abaikan data tenaga kerja yang kuat, kamu WAJIB pilih BUY.
-    3. Data Tenaga Kerja (NFP, ADP, AHE) hanya dipakai sebagai penentu arah jika data Inflasi netral atau tidak ada.
-    4. KONTEKS MARKET: DXY naik = konfirmasi SELL. DXY turun = konfirmasi BUY. Minyak naik = inflasi naik = SELL.
+    2. TENTUKAN FOKUS BERDASARKAN BERITA UTAMA:
+       - JIKA BERITA UTAMA ADALAH NFP (Tenaga Kerja): Fokus pada data Tenaga Kerja (NFP, ADP, Jobless, AHE). Ekonomi Kuat (Skor +) = SELL. Ekonomi Lemah (Skor -) = BUY.
+       - JIKA BERITA UTAMA ADALAH CPI (Inflasi): Fokus pada data Inflasi (CPI, Core CPI, PPI, PCE). Inflasi Panas (Skor +) = SELL. Inflasi Dingin (Skor -) = BUY.
+       - JIKA BERITA UTAMA ADALAH FOMC (Suku Bunga): Inflasi adalah RAJA. Jika Inflasi Panas (Skor +), abaikan Tenaga Kerja yang lemah, WAJIB SELL.
+    3. JIKA DATA CAMPUR ADUK: Gunakan logika prioritas di atas. Ingat, angka Actual yang sudah rilis jauh lebih kuat bobotnya dibandingkan sekadar ekspektasi.
+    4. KONTEKS MARKET: DXY naik = konfirmasi SELL. DXY turun = konfirmasi BUY. Minyak naik = Inflasi naik = SELL.
     
     Tugasmu:
     Tentukan arah XAUUSD dengan tegas (BUY/SELL) berdasarkan SOP Prioritas di atas.
@@ -38,7 +39,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     {{
         "signal": "BUY / SELL",
         "confidence": "High / Medium / Low",
-        "math_explanation": "Jelaskan analisa kamu berdasarkan SOP Prioritas (misal: Inflasi panas, maka SELL)",
+        "math_explanation": "Jelaskan analisa kamu berdasarkan SOP Prioritas (sebutkan berita utamanya apa, dan data mana yang jadi fokus utama)",
         "trade_plan": "Saran eksekusi trading untuk XAUUSD (Bahasa Indonesia)"
     }}
     """
