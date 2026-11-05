@@ -1,20 +1,27 @@
 # ====================================================
-# DASHBOARD MAKRO MANUAL - DATA RIIL (NOVEMBER 2026)
-# Sumber: Investing.com, Econoday, Trading Economics, BLS
+# DASHBOARD MAKRO MANUAL - DATA RIIL TERBARU
+# Sumber: Investing.com, Econoday, Trading Economics, BLS, FXMacroData
+# Update: 5 November 2026
 # ====================================================
 MANUAL_DASHBOARD = {
     # --- TENAGA KERJA (Fokus Utama NFP) ---
     "NFP": {
-        "actual": 29.0,       # Rilis 2 Okt (Sep): 29K
-        "forecast": 89.0,     # Konsensus saat itu: 89K
-        "previous": 133.0,    # Previous (Agustus): 133K
-        "date": "Sep-26"
+        "actual": 29.0,       # Rilis 2 Okt (Sep): 29K (Forecast saat itu 89K)
+        "forecast": 65.0,     # Ekspektasi NFP Okt (rilis 6 Nov)
+        "previous": 29.0,     # Actual sebelumnya (Sep): 29K
+        "date": "Okt-26"
     },
     "ADP Employment": {
-        "actual": 86.0,       # Rilis 4 Nov (Okt): 86K
-        "forecast": 67.0,     # Konsensus: 67K (beberapa sumber 69K)
+        "actual": 86.0,       # ADP Okt (rilis 4 Nov): 86K
+        "forecast": 67.0,     # Konsensus: 67K
         "previous": 86.0,     # Previous (Sep, revised): 86K
         "date": "Okt-26"
+    },
+    "JOLTs Job Openings": {
+        "actual": 7523.0,     # JOLTs Sep (rilis 3 Nov): 7.523 Juta
+        "forecast": 7100.0,   # Konsensus: 7.10 Juta
+        "previous": 7190.0,   # Previous (Agu, revised): 7.19 Juta
+        "date": "Sep-26"
     },
     "Unemployment Rate": {
         "actual": 4.2,        # Rilis 2 Okt (Sep): 4.2%
@@ -29,9 +36,9 @@ MANUAL_DASHBOARD = {
         "date": "Okt-26"
     },
     "Jobless Claims": {
-        "actual": 194.0,      # Rilis terbaru (akhir Okt): 194K
-        "forecast": 196.0,    # Ekspektasi: 196K
-        "previous": 194.0,    # Previous week: 194K
+        "actual": 194.0,      # Rilis akhir Okt: 194K
+        "forecast": 200.0,    # Konsensus: 200K
+        "previous": 200.0,    # Previous week: 200K
         "date": "Okt-26"
     },
 
