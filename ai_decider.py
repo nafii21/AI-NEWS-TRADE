@@ -11,30 +11,32 @@ def get_ai_decision(news_title, quant_context, market_context):
     prompt = f"""
     Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD (Gold).
     
-    [1. BERITA UTAMA YANG AKAN RILIS BESOK]
+    [1. BERITA UTAMA (TARGET PREDIKSI)]
     - Event: {news_title}
-    - Forecast (Ekspektasi Pasar Besok): {quant_context.get('main_forecast', 0.0)} # <--- TAMBAHAN
-    - Previous (Data Bulan Lalu): {quant_context.get('main_previous', 0.0)} # <--- TAMBAHAN
-    - Surprise Score Utama (S_t): {quant_context['main_surprise_score']}
+    - Forecast: {quant_context.get('main_forecast', 0.0)}
+    - Previous: {quant_context.get('main_previous', 0.0)}
+    - Skor Kejutan (S_t): {quant_context['main_surprise_score']}
     
-    [2. DATA KUANTITATIF PENDUKUNG (HISTORIS)]
-    - Skor Data Pendukung: {json.dumps(quant_context['supporting_analysis'], indent=2)}
+    [2. DATA KUANTITATIF PENDUKUNG (KONTEKS HISTORIS)]
+    {json.dumps(quant_context['supporting_analysis'], indent=2)}
     
-    [KONDISI MARKET SAAT INI]
+    [3. KONDISI MARKET SAAT INI]
     - Perubahan DXY hari ini: {market_context['dxy_change_pct']}%
     - Perubahan Harga Minyak: {market_context['oil_change_5d_pct']}%
     
-    [SOP PRIORITAS ANALISA - WAJIB DIPATUHI]
-    1. DILARANG KERAS memilih "NO TRADE" kecuali semua data benar-benar 0.0 (tidak ada data). Kamu HARUS memilih BUY atau SELL.
-    2. TENTUKAN FOKUS BERDASARKAN BERITA UTAMA:
-       - JIKA BERITA UTAMA ADALAH NFP (Tenaga Kerja): Fokus pada data Tenaga Kerja (NFP, ADP, JOLTs, Challenger, Jobless, Unemployment, AHE). Ekonomi Kuat (Skor +) = SELL. Ekonomi Lemah (Skor -) = BUY.
-       - JIKA BERITA UTAMA ADALAH CPI (Inflasi): Fokus pada data Inflasi (CPI, Core CPI, PPI, PCE). Inflasi Panas (Skor +) = SELL. Inflasi Dingin (Skor -) = BUY.
-       - JIKA BERITA UTAMA ADALAH FOMC (Suku Bunga): Inflasi adalah RAJA. Jika Inflasi Panas (Skor +), abaikan Tenaga Kerja yang lemah, WAJIB SELL.
-    3. JIKA DATA CAMPUR ADUK: Gunakan logika prioritas di atas. Ingat, angka Actual yang sudah rilis (di data pendukung) adalah konteks masa lalu. Fokus utamamu adalah memprediksi apakah angka Forecast besok akan tercapai atau meleset berdasarkan data pendukung tersebut. # <--- TAMBAHAN PENJELASAN
-    4. KONTEKS MARKET: DXY naik = konfirmasi SELL. DXY turun = konfirmasi BUY. Minyak naik = Inflasi naik = SELL.
+    [SOP ANALISA - WAJIB DIPATUHI]
+    1. DILARANG KERAS memilih "NO TRADE". Kamu HARUS memilih BUY atau SELL.
+    2. CATATAN PENTING: Data NFP historis sengaja tidak dimasukkan karena sudah *priced in*. Fokus analisa kamu adalah membandingkan *Forecast* NFP besok dengan data *Leading Indicator* (ADP, ISM, JOLTs, Challenger, dll).
+    3. ATURAN FILTER DOMAIN (SANGAT PENTING):
+       - JIKA BERITA UTAMA ADALAH NFP (Tenaga Kerja): ABAIKAN total data Inflasi (CPI/PPI). Fokus 100% pada data Tenaga Kerja.
+       - JIKA BERITA UTAMA ADALAH CPI (Inflasi): ABAIKAN total data Tenaga Kerja. Fokus 100% pada data Inflasi.
+       - JIKA BERITA UTAMA ADALAH FOMC: Gunakan data Inflasi sebagai prioritas, lalu Tenaga Kerja sebagai konfirmasi.
+    4. JANGAN MENJUMLAHKAN ATAU MERATA-RATA SKOR. Nilai data mana yang paling dominan untuk memprediksi apakah NFP besok akan mencapai {quant_context.get('main_forecast', 0.0)} atau tidak.
+    5. KONTEKS MARKET: DXY naik = konfirmasi SELL. DXY turun = konfirmasi BUY. Minyak naik = Inflasi naik = SELL.
+    6. CONFIDENCE: Berikan "High" HANYA JIKA semua data pendukung searah. Jika campur aduk (misal ADP kuat tapi ISM lemah), WAJIB berikan "Medium".
     
     Tugasmu:
-    Tentukan arah XAUUSD dengan tegas (BUY/SELL) berdasarkan SOP Prioritas di atas.
+    Tentukan arah XAUUSD dengan tegas (BUY/SELL) berdasarkan prediksi NFP besok dari data pendukung di atas.
     
     ATURAN BAHASA:
     Gunakan BAHASA INDONESIA yang baku dan profesional.
@@ -43,7 +45,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     {{
         "signal": "BUY / SELL",
         "confidence": "High / Medium / Low",
-        "math_explanation": "Jelaskan analisa kamu berdasarkan SOP Prioritas (sebutkan berita utamanya apa, dan data mana yang jadi fokus utama)",
+        "math_explanation": "Jelaskan analisa kamu berdasarkan data pendukung (ADP, ISM, JOLTs) untuk memprediksi NFP besok.",
         "trade_plan": "Saran eksekusi trading untuk XAUUSD (Bahasa Indonesia)"
     }}
     """
