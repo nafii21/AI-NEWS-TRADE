@@ -1,71 +1,72 @@
 # ====================================================
-# DASHBOARD MAKRO MANUAL - KONTEKS SEBELUM RILIS 7 AGUSTUS
+# 1. DASHBOARD MAKRO (Data Historis buat bahan analisa AI)
+# Data Riil per 5 November 2026
 # ====================================================
 MANUAL_DASHBOARD = {
-    # --- TENAGA KERJA (Data Historis Sebelum Agustus) ---
-    "NFP (Jun-26)": {
-        "actual": 20.0,        # Actual NFP Juni (dirilis awal Juli)
-        "forecast": 25.0,      # Ekspektasi saat itu
-        "previous": 15.0,      # Previous bulan Mei
-        "date": "Jun-26"
+    # --- TENAGA KERJA ---
+    "NFP": {
+        "actual": 29.0,       
+        "forecast": 89.0,     
+        "previous": 133.0,    
+        "date": "Sep-26"
     },
-    "ADP Employment (Jul-26)": {
-        "actual": 122.0,       # ADP Juli (rilis 5 Agustus)
-        "forecast": 150.0,     
-        "previous": 155.0,     
-        "date": "Jul-26"
+    "ADP Employment": {
+        "actual": 86.0,       
+        "forecast": 67.0,     
+        "previous": 86.0,     
+        "date": "Okt-26"
     },
-    "Challenger Job Cuts (Jul-26)": {
-        "actual": 50.0,        
-        "forecast": 45.0,      
-        "previous": 40.0,      
-        "date": "Jul-26"
+    "Challenger Job Cuts": {
+        "actual": 75.5,       # Actual PHK Okt-26
+        "forecast": 60.0,     # Ekspektasi pasar
+        "previous": 72.8,     # Previous (Sep-26)
+        "date": "Okt-26"
     },
-    "JOLTs Job Openings (Jun-26)": {
-        "actual": 7400.0,      
-        "forecast": 7500.0,    
-        "previous": 7600.0,    
-        "date": "Jun-26"
+    "JOLTs Job Openings": {
+        "actual": 7523.0,     
+        "forecast": 7100.0,   
+        "previous": 7190.0,   
+        "date": "Sep-26"
     },
-    "Unemployment Rate (Jun-26)": {
-        "actual": 4.1,         
-        "forecast": 4.1,       
-        "previous": 4.0,       
-        "date": "Jun-26"
+    "Unemployment Rate": {
+        "actual": 4.2,        
+        "forecast": 4.2,      
+        "previous": 4.1,      
+        "date": "Okt-26"
     },
-    "Average Hourly Earnings (Jun-26)": {
-        "actual": 0.4,         
-        "forecast": 0.3,       
-        "previous": 0.4,       
-        "date": "Jun-26"
+    "Average Hourly Earnings": {
+        "actual": 0.1,        
+        "forecast": 0.3,      
+        "previous": 0.3,      
+        "date": "Okt-26"
     },
-    "Jobless Claims (Jul-26)": {
-        "actual": 220.0,       
-        "forecast": 215.0,     
-        "previous": 210.0,     
-        "date": "Jul-26"
+    "Jobless Claims": {
+        "actual": 194.0,      
+        "forecast": 200.0,    
+        "previous": 200.0,    
+        "date": "Okt-26"
     },
 
     # --- INFLASI ---
-    "CPI (Jun-26)": {"actual": 3.4, "forecast": 3.4, "previous": 3.4, "date": "Jun-26"},
-    "Core CPI (Jun-26)": {"actual": 2.4, "forecast": 2.4, "previous": 2.5, "date": "Jun-26"},
-    "PPI (Jun-26)": {"actual": 0.1, "forecast": 0.2, "previous": 0.2, "date": "Jun-26"},
-    "Core PCE (Jun-26)": {"actual": 3.3, "forecast": 3.3, "previous": 3.3, "date": "Jun-26"},
+    "CPI": {"actual": 3.7, "forecast": 3.6, "previous": 3.4, "date": "Sep-26"},
+    "Core CPI": {"actual": 2.6, "forecast": 2.5, "previous": 2.4, "date": "Sep-26"},
+    "PPI": {"actual": 6.3, "forecast": 5.3, "previous": 5.6, "date": "Sep-26"},
+    "Core PCE": {"actual": 3.0, "forecast": 3.1, "previous": 3.0, "date": "Sep-26"},
 
     # --- PERTUMBUHAN & KONSUMEN ---
-    "GDP (Q2-26)": {"actual": 2.2, "forecast": 2.1, "previous": 2.0, "date": "Q2-26"},
-    "Retail Sales (Jun-26)": {"actual": 0.6, "forecast": 0.4, "previous": 0.3, "date": "Jun-26"},
-    "Consumer Confidence (Jul-26)": {"actual": 90.8, "forecast": 91.5, "previous": 92.0, "date": "Jul-26"}
+    "GDP": {"actual": 3.4, "forecast": 3.1, "previous": 2.2, "date": "Q3-26"},
+    "Retail Sales": {"actual": 0.8, "forecast": 0.3, "previous": 1.3, "date": "Sep-26"},
+    "Consumer Confidence": {"actual": 91.7, "forecast": 80.4, "previous": 84.2, "date": "Okt-26"}
 }
 
 # ====================================================
-# AGENDA RILIS 7 AGUSTUS 2026 (TARGET YANG MAU DITEBAK)
+# 2. AGENDA RILIS BESOK (NFP 6 Nov 2026)
 # ====================================================
 UPCOMING_EVENTS = [
     {
         "title": "NFP (Non-Farm Payrolls)",
-        "date_utc": "2026-08-07 12:30:00",
-        "forecast": 85.0,                  # Ekspektasi pasar untuk Agustus
-        "previous": 20.0                   # Data bulan lalu (Juni)
+        "date_utc": "2026-11-06 12:30:00", # 19:30 WIB (sesuai output lu)
+        "forecast": 63.0,                  # Sesuai Investing.com
+        "previous": 29.0
     }
 ]
