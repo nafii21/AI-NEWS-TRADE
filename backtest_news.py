@@ -54,7 +54,7 @@ def get_price_at_time_twelvedata(target_dt, offset_minutes):
     except: return None
 
 def run_backtest():
-    send_telegram("⏳ *Memulai Backtest NFP 7 Agustus 2026*...")
+    send_telegram("⏳ *Memulai Backtest (Bebas Bocoran): NFP 7 Agustus 2026*...")
     
     for i, scen in enumerate(SCENARIOS, 1):
         try:
