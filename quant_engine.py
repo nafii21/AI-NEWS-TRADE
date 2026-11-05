@@ -8,41 +8,26 @@ def get_historical_sigma(news_title):
     title = news_title.upper()
     
     # --- TENAGA KERJA ---
-    if "NON-FARM" in title or "NFP" in title: 
-        return 75.0        # NBER: 90.8, Swoopr: 65
-    elif "ADP" in title: 
-        return 50.0
-    elif "JOBLESS" in title: 
-        return 16.0        # NBER: 17.8, Swoopr: 15
-    elif "UNEMPLOYMENT" in title: 
-        return 0.15        # NBER: 0.14
-    elif "CHALLENGER" in title or "JOB CUTS" in title: 
-        return 30.0 
-    elif "JOLTS" in title or "JOB OPENINGS" in title: 
-        return 227.0       # Goldman Sachs: 227k
-    elif "ISM" in title: 
-        return 1.4         # Swoopr: 1.4
+    if "NON-FARM" in title or "NFP" in title: return 75.0
+    elif "ADP" in title: return 50.0
+    elif "JOBLESS" in title: return 16.0
+    elif "UNEMPLOYMENT" in title: return 0.15
+    elif "CHALLENGER" in title or "JOB CUTS" in title: return 30.0 
+    elif "JOLTS" in title or "JOB OPENINGS" in title: return 227.0
+    elif "ISM" in title: return 1.4
     
-    # --- INFLASI ---
-    elif "CPI" in title: 
-        return 0.13        # NBER: 0.12, Swoopr: 0.13
-    elif "CORE CPI" in title: 
-        return 0.09        # NBER: 0.09
-    elif "PPI" in title: 
-        return 0.40        # NBER: 0.40
-    elif "PCE" in title: 
-        return 0.20
-    elif "AVERAGE HOURLY" in title: 
-        return 0.10
+    # --- INFLASI (Urutan Core harus dicek dulu sebelum CPI biasa) ---
+    elif "CORE CPI" in title: return 0.09  # <--- FIX: Harus di atas CPI biasa
+    elif "CPI" in title: return 0.13
+    elif "PPI" in title: return 0.40
+    elif "PCE" in title: return 0.20
+    elif "AVERAGE HOURLY" in title: return 0.10
     
     # --- SUKU BUNGA & PERTUMBUHAN ---
-    elif "FOMC" in title or "FEDERAL FUNDS" in title: 
-        return 0.25
-    elif "GDP" in title: 
-        return 0.80        # NBER: 0.75, Swoopr: 0.9
-    elif "RETAIL SALES" in title: 
-        return 0.50        # NBER: 0.55, Swoopr: 0.5
-    
+    elif "FOMC" in title or "FEDERAL FUNDS" in title: return 0.25
+    elif "GDP" in title: return 0.80
+    elif "RETAIL SALES" in title: return 0.50
+    elif "CONSUMER CONFIDENCE" in title: return 5.0 # <--- FIX: Kasih Sigma
     return 1.0
 
 def build_pre_news_quant(news_title, forecast, previous, supporting_data):
@@ -75,12 +60,9 @@ def build_pre_news_quant(news_title, forecast, previous, supporting_data):
                 sup_score = calculate_surprise_score(fcst_val, prev_val, sup_sigma)
                 desc = f"Fcst: {fcst_val} vs Prev: {prev_val}"
 
-            # ====================================================
-            # FIX LOGIKA: INDIKATOR TERBALIK (Semakin tinggi semakin jelek)
-            # ====================================================
+            # Dibalikin buat indikator yang makin tinggi makin jelek
             if any(k in name_upper for k in ["JOBLESS", "UNEMPLOYMENT", "CHALLENGER", "JOB CUTS"]):
                 sup_score = sup_score * -1 
-            # ====================================================
                 
             context['supporting_analysis'][data_name] = {
                 "score": sup_score,
