@@ -8,13 +8,15 @@ def get_historical_sigma(news_title):
     title = news_title.upper()
     if "NON-FARM" in title or "NFP" in title: return 70.0
     elif "ADP" in title: return 50.0
-    elif "JOBLESS" in title or "UNEMPLOYMENT" in title: return 15.0
-    elif "JOLTS" in title or "JOB OPENINGS" in title: return 200.0 # <--- Fix JOLTs
+    elif "JOBLESS" in title: return 15.0
+    elif "UNEMPLOYMENT" in title: return 0.1  # <-- FIX: Skala Persen
+    elif "CHALLENGER" in title or "JOB CUTS" in title: return 30.0 
+    elif "JOLTS" in title or "JOB OPENINGS" in title: return 200.0 
     elif "CPI" in title: return 0.2
     elif "PPI" in title: return 0.3
     elif "PCE" in title: return 0.2
     elif "AVERAGE HOURLY" in title: return 0.1
-    elif "FOMC" in title: return 25.0
+    elif "FOMC" in title or "FEDERAL FUNDS" in title: return 0.25 # <-- FIX: Skala Persen (25 bps)
     elif "GDP" in title: return 0.5
     elif "RETAIL SALES" in title: return 0.4
     return 1.0
