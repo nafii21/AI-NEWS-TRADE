@@ -6,12 +6,14 @@ def calculate_surprise_score(actual, forecast, sigma_consensus):
 
 def get_historical_sigma(news_title):
     title = news_title.upper()
+    
     if "NON-FARM" in title or "NFP" in title: return 70.0
     elif "ADP" in title: return 50.0
     elif "JOBLESS" in title: return 15.0
     elif "UNEMPLOYMENT" in title: return 0.1  
     elif "CHALLENGER" in title or "JOB CUTS" in title: return 30.0 
     elif "JOLTS" in title or "JOB OPENINGS" in title: return 200.0 
+    elif "ISM" in title: return 2.0            # <--- Sigma ISM
     elif "CPI" in title: return 0.2
     elif "PPI" in title: return 0.3
     elif "PCE" in title: return 0.2
@@ -34,6 +36,7 @@ def build_pre_news_quant(news_title, forecast, previous, supporting_data):
     
     for data_name, data_val in supporting_data.items():
         try:
+            name_upper = data_name.upper()
             act_val = float(data_val.get('actual', 0))
             fcst_val = float(data_val.get('forecast', 0))
             prev_val = float(data_val.get('previous', 0))
@@ -51,11 +54,10 @@ def build_pre_news_quant(news_title, forecast, previous, supporting_data):
                 desc = f"Fcst: {fcst_val} vs Prev: {prev_val}"
 
             # ====================================================
-            # FIX LOGIKA: INDIKATOR TERBALIK (Semakin tinggi semakin jelek)
+            # FIX LOGIKA: Indikator yang makin tinggi makin jelek
             # ====================================================
-            name_upper = data_name.upper()
             if any(k in name_upper for k in ["JOBLESS", "UNEMPLOYMENT", "CHALLENGER", "JOB CUTS"]):
-                sup_score = sup_score * -1 # Dibalikin biar positif = bagus buat USD
+                sup_score = sup_score * -1 
             # ====================================================
                 
             context['supporting_analysis'][data_name] = {
