@@ -3,7 +3,7 @@ import requests
 import yfinance as yf
 import pandas as pd
 from datetime import datetime, timezone, timedelta
-from manual_macro import MANUAL_DASHBOARD # <--- IMPORT DATA MANUAL
+from manual_macro import MANUAL_DASHBOARD
 
 TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
@@ -40,8 +40,28 @@ def get_ff_upcoming_events():
             if dt_wib.date() in target_dates:
                 n['wib_time'] = dt_wib.strftime("%H:%M")
                 n['wib_date'] = dt_wib.strftime("%Y-%m-%d")
-                n['forecast'] = clean_float(n.get('forecast'))
-                n['previous'] = clean_float(n.get('previous'))
+                
+                # --- FIX HEADER 0.0 ---
+                title = n.get('title', '')
+                ff_forecast = clean_float(n.get('forecast'))
+                ff_previous = clean_float(n.get('previous'))
+                
+                # Kalau FF kosong (0.0), tarik dari Manual Dashboard
+                if ff_forecast == 0.0:
+                    if "Non-Farm" in title or "NFP" in title:
+                        n['forecast'] = MANUAL_DASHBOARD.get("NFP", {}).get("forecast", 0.0)
+                        n['previous'] = MANUAL_DASHBOARD.get("NFP", {}).get("previous", 0.0)
+                    elif "CPI" in title:
+                        n['forecast'] = MANUAL_DASHBOARD.get("CPI", {}).get("forecast", 0.0)
+                        n['previous'] = MANUAL_DASHBOARD.get("CPI", {}).get("previous", 0.0)
+                    else:
+                        n['forecast'] = ff_forecast
+                        n['previous'] = ff_previous
+                else:
+                    n['forecast'] = ff_forecast
+                    n['previous'] = ff_previous
+                # ----------------------
+                
                 upcoming.append(n)
         except: continue
     return upcoming
@@ -53,11 +73,13 @@ def get_news_and_cluster():
     if not upcoming_events: 
         return []
     
+    print("Menggunakan Dashboard Makro Manual...")
+    
     processed_events = []
     for main_event in upcoming_events:
         processed_events.append({
             "event": main_event,
-            "supporting_data": MANUAL_DASHBOARD # <--- PAKAI DATA MANUAL
+            "supporting_data": MANUAL_DASHBOARD
         })
         
     return processed_events
