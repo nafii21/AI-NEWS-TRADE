@@ -9,7 +9,7 @@ def get_historical_sigma(news_title):
     if "NON-FARM" in title or "NFP" in title: return 70.0
     elif "ADP" in title: return 50.0
     elif "JOBLESS" in title or "UNEMPLOYMENT" in title: return 15.0
-    elif "JOLTS" in title or "JOB OPENINGS" in title: return 200.0 # <--- TAMBAHAN BIAR GAK LEBAY
+    elif "JOLTS" in title or "JOB OPENINGS" in title: return 200.0 # <--- Fix JOLTs
     elif "CPI" in title: return 0.2
     elif "PPI" in title: return 0.3
     elif "PCE" in title: return 0.2
