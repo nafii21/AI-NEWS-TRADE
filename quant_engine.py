@@ -8,26 +8,44 @@ def get_historical_sigma(news_title):
     title = news_title.upper()
     
     # --- TENAGA KERJA ---
-    if "NON-FARM" in title or "NFP" in title: return 75.0
-    elif "ADP" in title: return 50.0
-    elif "JOBLESS" in title: return 16.0
-    elif "UNEMPLOYMENT" in title: return 0.15
-    elif "CHALLENGER" in title or "JOB CUTS" in title: return 30.0 
-    elif "JOLTS" in title or "JOB OPENINGS" in title: return 227.0
-    elif "ISM" in title: return 1.4
+    if "NON-FARM" in title or "NFP" in title: 
+        return 70.0
+    elif "ADP" in title: 
+        return 50.0
+    elif "JOBLESS" in title: 
+        return 15.0
+    elif "UNEMPLOYMENT" in title: 
+        return 0.15   
+    elif "CHALLENGER" in title or "JOB CUTS" in title: 
+        return 30.0 
+    elif "JOLTS" in title or "JOB OPENINGS" in title: 
+        return 200.0
+    elif "ISM" in title: 
+        return 5.0
     
-    # --- INFLASI (Urutan Core harus dicek dulu sebelum CPI biasa) ---
-    elif "CORE CPI" in title: return 0.09  # <--- FIX: Harus di atas CPI biasa
-    elif "CPI" in title: return 0.13
-    elif "PPI" in title: return 0.40
-    elif "PCE" in title: return 0.20
-    elif "AVERAGE HOURLY" in title: return 0.10
+    # --- INFLASI ---
+    elif "CORE CPI" in title: 
+        return 0.15
+    elif "CPI" in title: 
+        return 0.20
+    elif "CORE PPI" in title: 
+        return 0.25
+    elif "PPI" in title: 
+        return 0.30
+    elif "PCE" in title: 
+        return 0.20
+    elif "AVERAGE HOURLY" in title: 
+        return 0.10
     
     # --- SUKU BUNGA & PERTUMBUHAN ---
-    elif "FOMC" in title or "FEDERAL FUNDS" in title: return 0.25
-    elif "GDP" in title: return 0.80
-    elif "RETAIL SALES" in title: return 0.50
-    elif "CONSUMER CONFIDENCE" in title: return 5.0 # <--- FIX: Kasih Sigma
+    elif "FOMC" in title or "FEDERAL FUNDS" in title: 
+        return 0.25
+    elif "GDP" in title: 
+        return 0.50
+    elif "RETAIL SALES" in title: 
+        return 0.50
+    elif "CONSUMER CONFIDENCE" in title: 
+        return 10.0
     return 1.0
 
 def build_pre_news_quant(news_title, forecast, previous, supporting_data):
