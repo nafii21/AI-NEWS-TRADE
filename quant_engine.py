@@ -6,39 +6,19 @@ def calculate_surprise_score(actual, forecast, sigma_consensus):
 
 def get_historical_sigma(news_title):
     title = news_title.upper()
-    
-    # --- TENAGA KERJA ---
-    if "NON-FARM" in title or "NFP" in title: 
-        return 70.0
-    elif "ADP" in title: 
-        return 50.0
-    elif "JOBLESS" in title: 
-        return 15.0
-    elif "UNEMPLOYMENT" in title: 
-        return 0.1  # Skala persen (misal 4.2%)
-    elif "CHALLENGER" in title or "JOB CUTS" in title: 
-        return 30.0 
-    elif "JOLTS" in title or "JOB OPENINGS" in title: 
-        return 200.0 
-    
-    # --- INFLASI ---
-    elif "CPI" in title: 
-        return 0.2
-    elif "PPI" in title: 
-        return 0.3
-    elif "PCE" in title: 
-        return 0.2
-    elif "AVERAGE HOURLY" in title: 
-        return 0.1
-    
-    # --- SUKU BUNGA & PERTUMBUHAN ---
-    elif "FOMC" in title or "FEDERAL FUNDS" in title: 
-        return 0.25
-    elif "GDP" in title: 
-        return 0.5
-    elif "RETAIL SALES" in title: 
-        return 0.4
-    
+    if "NON-FARM" in title or "NFP" in title: return 70.0
+    elif "ADP" in title: return 50.0
+    elif "JOBLESS" in title: return 15.0
+    elif "UNEMPLOYMENT" in title: return 0.1  
+    elif "CHALLENGER" in title or "JOB CUTS" in title: return 30.0 
+    elif "JOLTS" in title or "JOB OPENINGS" in title: return 200.0 
+    elif "CPI" in title: return 0.2
+    elif "PPI" in title: return 0.3
+    elif "PCE" in title: return 0.2
+    elif "AVERAGE HOURLY" in title: return 0.1
+    elif "FOMC" in title or "FEDERAL FUNDS" in title: return 0.25 
+    elif "GDP" in title: return 0.5
+    elif "RETAIL SALES" in title: return 0.4
     return 1.0
 
 def build_pre_news_quant(news_title, forecast, previous, supporting_data):
@@ -46,12 +26,9 @@ def build_pre_news_quant(news_title, forecast, previous, supporting_data):
     main_surprise_score = calculate_surprise_score(forecast, previous, main_sigma)
     
     context = {
-        # Data Utama (Ekspektasi Besok) dikirim ke AI
         "main_forecast": forecast,     
         "main_previous": previous,     
         "main_surprise_score": main_surprise_score,
-        
-        # Data Pendukung (Historis)
         "supporting_analysis": {}
     }
     
@@ -72,6 +49,14 @@ def build_pre_news_quant(news_title, forecast, previous, supporting_data):
             else:
                 sup_score = calculate_surprise_score(fcst_val, prev_val, sup_sigma)
                 desc = f"Fcst: {fcst_val} vs Prev: {prev_val}"
+
+            # ====================================================
+            # FIX LOGIKA: INDIKATOR TERBALIK (Semakin tinggi semakin jelek)
+            # ====================================================
+            name_upper = data_name.upper()
+            if any(k in name_upper for k in ["JOBLESS", "UNEMPLOYMENT", "CHALLENGER", "JOB CUTS"]):
+                sup_score = sup_score * -1 # Dibalikin biar positif = bagus buat USD
+            # ====================================================
                 
             context['supporting_analysis'][data_name] = {
                 "score": sup_score,
