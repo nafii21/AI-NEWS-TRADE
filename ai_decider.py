@@ -10,10 +10,14 @@ def get_ai_decision(news_title, quant_context, market_context):
     
     prompt = f"""
     Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD (Gold).
-    Hari ini ada rilis berita utama: {news_title}.
     
-    [DATA KUANTITATIF]
+    [1. BERITA UTAMA YANG AKAN RILIS BESOK]
+    - Event: {news_title}
+    - Forecast (Ekspektasi Pasar Besok): {quant_context.get('main_forecast', 0.0)} # <--- TAMBAHAN
+    - Previous (Data Bulan Lalu): {quant_context.get('main_previous', 0.0)} # <--- TAMBAHAN
     - Surprise Score Utama (S_t): {quant_context['main_surprise_score']}
+    
+    [2. DATA KUANTITATIF PENDUKUNG (HISTORIS)]
     - Skor Data Pendukung: {json.dumps(quant_context['supporting_analysis'], indent=2)}
     
     [KONDISI MARKET SAAT INI]
@@ -26,7 +30,7 @@ def get_ai_decision(news_title, quant_context, market_context):
        - JIKA BERITA UTAMA ADALAH NFP (Tenaga Kerja): Fokus pada data Tenaga Kerja (NFP, ADP, JOLTs, Challenger, Jobless, Unemployment, AHE). Ekonomi Kuat (Skor +) = SELL. Ekonomi Lemah (Skor -) = BUY.
        - JIKA BERITA UTAMA ADALAH CPI (Inflasi): Fokus pada data Inflasi (CPI, Core CPI, PPI, PCE). Inflasi Panas (Skor +) = SELL. Inflasi Dingin (Skor -) = BUY.
        - JIKA BERITA UTAMA ADALAH FOMC (Suku Bunga): Inflasi adalah RAJA. Jika Inflasi Panas (Skor +), abaikan Tenaga Kerja yang lemah, WAJIB SELL.
-    3. JIKA DATA CAMPUR ADUK: Gunakan logika prioritas di atas. Ingat, angka Actual yang sudah rilis jauh lebih kuat bobotnya dibandingkan sekadar ekspektasi.
+    3. JIKA DATA CAMPUR ADUK: Gunakan logika prioritas di atas. Ingat, angka Actual yang sudah rilis (di data pendukung) adalah konteks masa lalu. Fokus utamamu adalah memprediksi apakah angka Forecast besok akan tercapai atau meleset berdasarkan data pendukung tersebut. # <--- TAMBAHAN PENJELASAN
     4. KONTEKS MARKET: DXY naik = konfirmasi SELL. DXY turun = konfirmasi BUY. Minyak naik = Inflasi naik = SELL.
     
     Tugasmu:
