@@ -1,15 +1,12 @@
-# ====================================================
-# DASHBOARD MAKRO MANUAL - UPDATE ISM EMPLOYMENT
-# ====================================================
 MANUAL_DASHBOARD = {
     # --- TENAGA KERJA (LEADING INDICATORS) ---
     "ADP Employment": {
         "actual": 86.0, "forecast": 67.0, "previous": 86.0, "date": "Okt-26"
     },
-    "ISM Manufacturing Employment": {
-        "actual": 46.8,        # Actual Okt (Employment Index)
-        "forecast": 47.5,      # Ekspektasi pasar
-        "previous": 45.4,      # Bulan lalu (Sep)
+    "ISM Employment Index": {
+        "actual": 46.8,        # Actual Okt (Employment Index Manufaktur)
+        "forecast": 47.5,      
+        "previous": 45.4,      
         "date": "Okt-26"
     },
     "Challenger Job Cuts": {
