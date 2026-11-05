@@ -9,6 +9,7 @@ def get_historical_sigma(news_title):
     if "NON-FARM" in title or "NFP" in title: return 70.0
     elif "ADP" in title: return 50.0
     elif "JOBLESS" in title or "UNEMPLOYMENT" in title: return 15.0
+    elif "JOLTS" in title or "JOB OPENINGS" in title: return 200.0 # <--- TAMBAHAN BIAR GAK LEBAY
     elif "CPI" in title: return 0.2
     elif "PPI" in title: return 0.3
     elif "PCE" in title: return 0.2
@@ -40,7 +41,7 @@ def build_pre_news_quant(news_title, forecast, previous, supporting_data):
                     desc = f"Actual: {act_val} vs Fcst: {fcst_val}"
                 else:
                     sup_score = 0.0
-                    desc = f"Actual: {act_val} (Fcst N/A)" # <--- N/A kalau gak ada forecast
+                    desc = f"Actual: {act_val} (Fcst N/A)"
             else:
                 sup_score = calculate_surprise_score(fcst_val, prev_val, sup_sigma)
                 desc = f"Fcst: {fcst_val} vs Prev: {prev_val}"
