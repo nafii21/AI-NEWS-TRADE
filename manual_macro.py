@@ -1,13 +1,14 @@
+# ====================================================
+# DASHBOARD MAKRO MANUAL - UPDATE 6 NOVEMBER 2026
+# Data Jobless Claims terbaru sudah dimasukkan
+# ====================================================
 MANUAL_DASHBOARD = {
     # --- TENAGA KERJA (LEADING INDICATORS) ---
     "ADP Employment": {
         "actual": 86.0, "forecast": 67.0, "previous": 86.0, "date": "Okt-26"
     },
     "ISM Employment Index": {
-        "actual": 46.8,        # Actual Okt (Employment Index Manufaktur)
-        "forecast": 47.5,      
-        "previous": 45.4,      
-        "date": "Okt-26"
+        "actual": 46.8, "forecast": 47.5, "previous": 45.4, "date": "Okt-26"
     },
     "Challenger Job Cuts": {
         "actual": 43.99, "forecast": 50.0, "previous": 43.28, "date": "Okt-26"
@@ -22,7 +23,10 @@ MANUAL_DASHBOARD = {
         "actual": 0.1, "forecast": 0.3, "previous": 0.3, "date": "Sep-26"
     },
     "Jobless Claims": {
-        "actual": 189.0, "forecast": 197.0, "previous": 195.0, "date": "Novm-05"
+        "actual": 189.0,       # <--- UPDATE: Rilis terbaru 5 Nov
+        "forecast": 196.0,     # Ekspektasi pasar
+        "previous": 194.0,     # Data minggu sebelumnya
+        "date": "Okt-26"
     },
 
     # --- INFLASI ---
