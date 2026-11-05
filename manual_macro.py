@@ -22,7 +22,7 @@ MANUAL_DASHBOARD = {
         "actual": 0.1, "forecast": 0.3, "previous": 0.3, "date": "Sep-26"
     },
     "Jobless Claims": {
-        "actual": 194.0, "forecast": 199.0, "previous": 195.0, "date": "Okt-26"
+        "actual": 189.0, "forecast": 197.0, "previous": 195.0, "date": "Novm-05"
     },
 
     # --- INFLASI ---
