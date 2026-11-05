@@ -1,15 +1,16 @@
 # ====================================================
-# DASHBOARD MAKRO MANUAL - TANPA NFP HISTORIS
+# DASHBOARD MAKRO MANUAL - UPDATE ISM EMPLOYMENT
 # ====================================================
 MANUAL_DASHBOARD = {
-    # "NFP" SENGAJA DIHAPUS KARENA SUDAH PRICED IN
-    
     # --- TENAGA KERJA (LEADING INDICATORS) ---
     "ADP Employment": {
         "actual": 86.0, "forecast": 67.0, "previous": 86.0, "date": "Okt-26"
     },
-    "ISM Manufacturing PMI": {
-        "actual": 48.5, "forecast": 47.5, "previous": 47.2, "date": "Okt-26"
+    "ISM Manufacturing Employment": {
+        "actual": 46.8,        # Actual Okt (Employment Index)
+        "forecast": 47.5,      # Ekspektasi pasar
+        "previous": 45.4,      # Bulan lalu (Sep)
+        "date": "Okt-26"
     },
     "Challenger Job Cuts": {
         "actual": 43.99, "forecast": 50.0, "previous": 43.28, "date": "Okt-26"
