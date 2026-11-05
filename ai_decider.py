@@ -23,7 +23,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     [SOP PRIORITAS ANALISA - WAJIB DIPATUHI]
     1. DILARANG KERAS memilih "NO TRADE" kecuali semua data benar-benar 0.0 (tidak ada data). Kamu HARUS memilih BUY atau SELL.
     2. TENTUKAN FOKUS BERDASARKAN BERITA UTAMA:
-       - JIKA BERITA UTAMA ADALAH NFP (Tenaga Kerja): Fokus pada data Tenaga Kerja (NFP, ADP, JOLTs, Jobless, Unemployment, AHE). Ekonomi Kuat (Skor +) = SELL. Ekonomi Lemah (Skor -) = BUY.
+       - JIKA BERITA UTAMA ADALAH NFP (Tenaga Kerja): Fokus pada data Tenaga Kerja (NFP, ADP, JOLTs, Challenger, Jobless, Unemployment, AHE). Ekonomi Kuat (Skor +) = SELL. Ekonomi Lemah (Skor -) = BUY.
        - JIKA BERITA UTAMA ADALAH CPI (Inflasi): Fokus pada data Inflasi (CPI, Core CPI, PPI, PCE). Inflasi Panas (Skor +) = SELL. Inflasi Dingin (Skor -) = BUY.
        - JIKA BERITA UTAMA ADALAH FOMC (Suku Bunga): Inflasi adalah RAJA. Jika Inflasi Panas (Skor +), abaikan Tenaga Kerja yang lemah, WAJIB SELL.
     3. JIKA DATA CAMPUR ADUK: Gunakan logika prioritas di atas. Ingat, angka Actual yang sudah rilis jauh lebih kuat bobotnya dibandingkan sekadar ekspektasi.
