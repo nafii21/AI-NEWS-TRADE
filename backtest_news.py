@@ -14,9 +14,9 @@ from manual_macro import MANUAL_DASHBOARD
 SCENARIOS = [
     {
         "title": "NFP (Non-Farm Payrolls)",
-        "forecast": 85.0,
-        "previous": 20.0,
-        "date_utc": "2026-08-07 12:30:00",
+        "forecast": 63.0,
+        "previous": 29.0,
+        "date_utc": "2026-11-06 12:30:00",
         "supporting": MANUAL_DASHBOARD,
         "dxy_change": 0.0,
         "oil_change": 0.0
