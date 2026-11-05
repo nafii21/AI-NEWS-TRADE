@@ -9,7 +9,7 @@ from ai_decider import get_ai_decision
 from manual_macro import MANUAL_DASHBOARD
 
 # ====================================================
-# SKENARIO BACKTEST: NFP 7 AGUSTUS 2026
+# SKENARIO BACKTEST: NFP 6 NOVEMBER 2026
 # ====================================================
 SCENARIOS = [
     {
