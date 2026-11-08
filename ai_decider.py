@@ -32,6 +32,7 @@ def get_ai_decision(news_title, quant_context, market_context):
        - JIKA BERITA UTAMA ADALAH CPI (Inflasi): ABAIKAN total data Tenaga Kerja. Fokus 100% pada data Inflasi.
        - JIKA BERITA UTAMA ADALAH FOMC: Gunakan data Inflasi sebagai prioritas, lalu Tenaga Kerja sebagai konfirmasi.
     4. ATURAN KHUSUS CPI (KORELASI KOMPONEN):
+       - UPAH / AHE (Average Hourly Earnings): INI ADALAH DATA INFLASI (Wage-Push), BUKAN tenaga kerja biasa. Jika AHE Actual > Forecast, artinya upah naik -> inflasi jasa naik -> Hawkish (SELL Gold).
        - SHELTER (Rent & OER): Menyumbang ~40% CPI. Jika CPI Rent dan OER Actual lebih tinggi dari Forecast (Skor Positif), maka ada tekanan inflasi struktural yang kuat. Beri bobot besar untuk SELL Gold.
        - FOOD (Food at Home & CRB Foodstuffs): Menyumbang ~13% CPI. Jika Food at Home Actual positif, dan CRB Foodstuffs juga naik, ini konfirmasi tambahan bahwa inflasi pangan memanas.
        - CASE-SHILLER: Indikator leading untuk Shelter. Jika Case-Shiller turun, artinya tekanan sewa di masa depan bakal reda (Dovish jangka panjang).
