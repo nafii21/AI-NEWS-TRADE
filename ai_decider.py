@@ -75,7 +75,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     }
     
     try:
-        response = requests.post(url, json=payload, headers=headers, timeout=90)
+        response = requests.post(url, json=payload, headers=headers, timeout=120)
         resp = response.json()
         
         if "error" in resp:
