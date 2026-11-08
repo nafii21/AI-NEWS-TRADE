@@ -31,9 +31,13 @@ def get_ai_decision(news_title, quant_context, market_context):
        - JIKA BERITA UTAMA ADALAH NFP (Tenaga Kerja): ABAIKAN total data Inflasi (CPI/PPI). Fokus 100% pada data Tenaga Kerja.
        - JIKA BERITA UTAMA ADALAH CPI (Inflasi): ABAIKAN total data Tenaga Kerja. Fokus 100% pada data Inflasi.
        - JIKA BERITA UTAMA ADALAH FOMC: Gunakan data Inflasi sebagai prioritas, lalu Tenaga Kerja sebagai konfirmasi.
-    4. JANGAN MENJUMLAHKAN ATAU MERATA-RATA SKOR. Nilai data mana yang paling dominan untuk memprediksi apakah NFP besok akan mencapai {quant_context.get('main_forecast', 0.0)} atau tidak.
-    5. KONTEKS MARKET: DXY naik = konfirmasi SELL. DXY turun = konfirmasi BUY. Minyak naik = Inflasi naik = SELL.
-    6. CONFIDENCE: Berikan "High" HANYA JIKA semua data pendukung searah. Jika campur aduk (misal ADP kuat tapi ISM lemah), WAJIB berikan "Medium".
+    4. ATURAN KHUSUS CPI (KORELASI KOMPONEN):
+       - SHELTER (Rent & OER): Menyumbang ~40% CPI. Jika CPI Rent dan OER Actual lebih tinggi dari Forecast (Skor Positif), maka ada tekanan inflasi struktural yang kuat. Beri bobot besar untuk SELL Gold.
+       - FOOD (Food at Home & CRB Foodstuffs): Menyumbang ~13% CPI. Jika Food at Home Actual positif, dan CRB Foodstuffs juga naik, ini konfirmasi tambahan bahwa inflasi pangan memanas.
+       - CASE-SHILLER: Indikator leading untuk Shelter. Jika Case-Shiller turun, artinya tekanan sewa di masa depan bakal reda (Dovish jangka panjang).
+    5. JANGAN MENJUMLAHKAN ATAU MERATA-RATA SKOR. Nilai data mana yang paling dominan untuk memprediksi apakah NFP besok akan mencapai {quant_context.get('main_forecast', 0.0)} atau tidak.
+    6. KONTEKS MARKET: DXY naik = konfirmasi SELL. DXY turun = konfirmasi BUY. Minyak naik = Inflasi naik = SELL.
+    7. CONFIDENCE: Berikan "High" HANYA JIKA semua data pendukung searah. Jika campur aduk (misal ADP kuat tapi ISM lemah), WAJIB berikan "Medium".
     
     Tugasmu:
     Tentukan arah XAUUSD dengan tegas (BUY/SELL) berdasarkan prediksi NFP besok dari data pendukung di atas.
