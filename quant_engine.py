@@ -29,9 +29,9 @@ def get_historical_sigma(news_title):
     elif "CPI" in title: 
         return 0.20
     elif "CORE PPI" in title: 
-        return 0.25
+        return 0.20
     elif "PPI" in title: 
-        return 0.30
+        return 0.25
     elif "PCE" in title: 
         return 0.20
     elif "AVERAGE HOURLY" in title: 
