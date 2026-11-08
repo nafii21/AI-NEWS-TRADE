@@ -1,39 +1,55 @@
 # ====================================================
-# DASHBOARD MAKRO MANUAL - UPDATE 6 NOVEMBER 2026
-# Data Jobless Claims terbaru sudah dimasukkan
+# DASHBOARD MAKRO MANUAL - FOOD & SHELTER UNTUK CPI
 # ====================================================
 MANUAL_DASHBOARD = {
-    # --- TENAGA KERJA (LEADING INDICATORS) ---
-    "ADP Employment": {
-        "actual": 86.0, "forecast": 67.0, "previous": 86.0, "date": "Okt-26"
+    # --- TENAGA KERJA (Untuk NFP) ---
+    "ADP Employment": {"actual": 86.0, "forecast": 67.0, "previous": 86.0, "date": "Okt-26"},
+    "ISM Employment Index": {"actual": 46.8, "forecast": 47.5, "previous": 45.4, "date": "Okt-26"},
+    "Challenger Job Cuts": {"actual": 43.99, "forecast": 50.0, "previous": 43.28, "date": "Okt-26"},
+    "JOLTs Job Openings": {"actual": 7523.0, "forecast": 7100.0, "previous": 7190.0, "date": "Sep-26"},
+    "Unemployment Rate": {"actual": 4.2, "forecast": 4.1, "previous": 4.1, "date": "Sep-26"},
+    "Average Hourly Earnings": {"actual": 0.4, "forecast": 0.3, "previous": 0.1, "date": "Okt-26"},
+    "Jobless Claims": {"actual": 189.0, "forecast": 196.0, "previous": 194.0, "date": "Okt-26"},
+
+    # --- INFLASI UTAMA (Untuk CPI) ---
+    "PPI": {"actual": 6.3, "forecast": 5.3, "previous": 5.6, "date": "Sep-26"},
+    "Core PPI": {"actual": 5.0, "forecast": 4.4, "previous": 4.8, "date": "Sep-26"},
+    "Core PCE": {"actual": 3.0, "forecast": 3.1, "previous": 3.0, "date": "Sep-26"},
+
+    # --- KOMPONEN PANGAN (FOOD) ---
+    # Menggunakan MoM karena CPI dihitung bulanan
+    "Food at Home (MoM)": {
+        "actual": -0.1,       # Rilis BLS Sep-26: -0.1%
+        "forecast": 0.1,      # Ekspektasi melandai
+        "previous": 0.0,      
+        "date": "Sep-26"
     },
-    "ISM Employment Index": {
-        "actual": 46.8, "forecast": 47.5, "previous": 45.4, "date": "Okt-26"
-    },
-    "Challenger Job Cuts": {
-        "actual": 43.99, "forecast": 50.0, "previous": 43.28, "date": "Okt-26"
-    },
-    "JOLTs Job Openings": {
-        "actual": 7523.0, "forecast": 7100.0, "previous": 7190.0, "date": "Sep-26"
-    },
-    "Unemployment Rate": {
-        "actual": 4.2, "forecast": 4.1, "previous": 4.1, "date": "Sep-26"
-    },
-    "Average Hourly Earnings": {
-        "actual": 0.1, "forecast": 0.3, "previous": 0.3, "date": "Sep-26"
-    },
-    "Jobless Claims": {
-        "actual": 189.0,       # <--- UPDATE: Rilis terbaru 5 Nov
-        "forecast": 196.0,     # Ekspektasi pasar
-        "previous": 194.0,     # Data minggu sebelumnya
+    "CRB Foodstuffs": {
+        "actual": 0.0,        # Indeks komoditas pangan flat
+        "forecast": 0.0,
+        "previous": 0.0,
         "date": "Okt-26"
     },
 
-    # --- INFLASI ---
-    "CPI": {"actual": 3.7, "forecast": 3.6, "previous": 3.4, "date": "Sep-26"},
-    "Core CPI": {"actual": 2.6, "forecast": 2.5, "previous": 2.4, "date": "Sep-26"},
-    "PPI": {"actual": 6.3, "forecast": 5.3, "previous": 5.6, "date": "Sep-26"},
-    "Core PCE": {"actual": 3.0, "forecast": 3.1, "previous": 3.0, "date": "Sep-26"},
+    # --- KOMPONEN PERUMAHAN (SHELTER) ---
+    "CPI Rent (MoM)": {
+        "actual": 0.2,        # Rilis BLS Sep-26
+        "forecast": 0.3,
+        "previous": 0.3,      
+        "date": "Sep-26"
+    },
+    "CPI OER (MoM)": {
+        "actual": 0.3,        # Rilis BLS Sep-26
+        "forecast": 0.4,
+        "previous": 0.3,
+        "date": "Sep-26"
+    },
+    "Case-Shiller Home Price (YoY)": {
+        "actual": 0.8,        # Rilis Mar-26 (terbaru)
+        "forecast": 0.9,
+        "previous": 1.2,
+        "date": "Mar-26"
+    },
 
     # --- PERTUMBUHAN & KONSUMEN ---
     "GDP": {"actual": 3.4, "forecast": 3.2, "previous": 2.2, "date": "Q3-26"},
@@ -42,13 +58,13 @@ MANUAL_DASHBOARD = {
 }
 
 # ====================================================
-# AGENDA RILIS BESOK (NFP 6 Nov 2026)
+# AGENDA RILIS BESOK (CPI 10 Nov 2026)
 # ====================================================
 UPCOMING_EVENTS = [
     {
-        "title": "NFP (Non-Farm Payrolls)",
-        "date_utc": "2026-11-06 12:30:00",
-        "forecast": 63.0,                  
-        "previous": 29.0
+        "title": "CPI m/m",
+        "date_utc": "2026-11-10 13:30:00", # 20:30 WIB
+        "forecast": 0.3,                  
+        "previous": 0.6
     }
 ]
