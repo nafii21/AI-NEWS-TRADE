@@ -6,7 +6,7 @@ import re
 def get_ai_decision(news_title, quant_context, market_context):
     api_key = os.getenv("SAKELAR_API_KEY")
     url = "https://api.sakelar.web.id/v1/chat/completions"
-    model_name = "deepseek-v4.1-flash"
+    model_name = "kimi-k3.1-pro"
     
     prompt = f"""
     Kamu adalah Macro Quant Trader Institusi Spesialis XAUUSD (Gold).
