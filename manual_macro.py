@@ -1,5 +1,5 @@
 # ====================================================
-# DASHBOARD MAKRO MANUAL
+# DASHBOARD MAKRO MANUAL - UPDATE DATA SHELTER
 # ====================================================
 MANUAL_DASHBOARD = {
     # --- TENAGA KERJA (Okt-26) ---
@@ -17,12 +17,34 @@ MANUAL_DASHBOARD = {
     "Core PPI (MoM)": {"actual": 0.7, "forecast": 0.3, "previous": 0.2, "date": "Sep-26"},
     "Core PCE": {"actual": 3.0, "forecast": 3.1, "previous": 3.0, "date": "Sep-26"},
     
-    # --- KOMPONEN PANGAN & PERUMAHAN ---
+    # --- KOMPONEN PANGAN & PERUMAHAN (DATA BARU) ---
     "Food at Home (MoM)": {"actual": -0.1, "forecast": 0.1, "previous": 0.0, "date": "Sep-26"},
     "CRB Foodstuffs": {"actual": 0.0, "forecast": 0.0, "previous": 0.0, "date": "Okt-26"},
-    "CPI Rent (MoM)": {"actual": 0.2, "forecast": 0.3, "previous": 0.3, "date": "Sep-26"},
-    "CPI OER (MoM)": {"actual": 0.3, "forecast": 0.4, "previous": 0.3, "date": "Sep-26"},
-    "Case-Shiller Home Price (YoY)": {"actual": 0.8, "forecast": 0.9, "previous": 1.2, "date": "Mar-26"},
+    
+    "Zillow Rent Index (YoY)": {  # <--- Leading Indicator Baru
+        "actual": 2.9, 
+        "forecast": 3.0,      # Estimasi pasar
+        "previous": 2.7,      # Bulan lalu
+        "date": "Okt-26"
+    },
+    "CPI Shelter (MoM)": {        # <--- Data Utama Shelter
+        "actual": 0.4, 
+        "forecast": 0.3, 
+        "previous": 0.3, 
+        "date": "Sep-26"
+    },
+    "CPI Shelter (YoY)": {
+        "actual": 3.2, 
+        "forecast": 3.2, 
+        "previous": 3.0, 
+        "date": "Sep-26"
+    },
+    "CPI Rent (MoM)": {
+        "actual": 0.2, "forecast": 0.3, "previous": 0.3, "date": "Sep-26"
+    },
+    "CPI OER (MoM)": {
+        "actual": 0.3, "forecast": 0.4, "previous": 0.3, "date": "Sep-26"
+    },
 
     # --- PERTUMBUHAN & KONSUMEN ---
     "GDP": {"actual": 3.4, "forecast": 3.2, "previous": 2.2, "date": "Q3-26"},
@@ -36,14 +58,14 @@ MANUAL_DASHBOARD = {
 UPCOMING_EVENTS = [
     {
         "title": "CPI m/m",
-        "date_utc": "2026-11-10 13:30:00", # 20:30 WIB
+        "date_utc": "2026-11-10 13:30:00",
         "forecast": 0.3,                  
         "previous": 0.6
     },
     {
         "title": "Core CPI m/m",
-        "date_utc": "2026-11-10 13:30:00", # Rilis barengan
-        "forecast": 0.2,                   # Ekspektasi Core (sesuaikan dgn Investing.com)
+        "date_utc": "2026-11-10 13:30:00",
+        "forecast": 0.2,                  
         "previous": 0.3
     }
 ]
