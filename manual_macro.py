@@ -55,10 +55,12 @@ MANUAL_DASHBOARD = {
 # ====================================================
 # AGENDA RILIS BESOK (CPI & CORE CPI 10 Nov 2026)
 # ====================================================
-UPCOMING_EVENTS = [
+UPCOMING_EVENTS = 
+[
     {
         "title": "CPI m/m",
         "date_utc": "2026-11-10 13:30:00",
         "forecast": 0.3,                  
         "previous": 0.6
     }
+]
