@@ -61,11 +61,4 @@ UPCOMING_EVENTS = [
         "date_utc": "2026-11-10 13:30:00",
         "forecast": 0.3,                  
         "previous": 0.6
-    },
-    {
-        "title": "Core CPI m/m",
-        "date_utc": "2026-11-10 13:30:00",
-        "forecast": 0.2,                  
-        "previous": 0.3
     }
-]
