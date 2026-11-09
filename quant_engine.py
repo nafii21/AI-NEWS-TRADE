@@ -24,25 +24,21 @@ def get_historical_sigma(news_title):
         return 5.0
     
     # --- INFLASI ---
-    elif "CORE CPI" in title: 
-        return 0.15
-    elif "CPI" in title: 
-        return 0.20
-    elif "CORE PPI" in title: 
-        return 0.20
-    elif "PPI" in title: 
-        return 0.25
-    elif "PCE" in title: 
-        return 0.20
-    elif "AVERAGE HOURLY" in title: 
-        return 0.10
-        
+    elif "CORE CPI" in title: return 0.15
+    elif "CPI" in title: return 0.20
+    elif "CORE PPI" in title: return 0.20
+    elif "PPI" in title: return 0.25
+    elif "PCE" in title: return 0.20
+    elif "AVERAGE HOURLY" in title: return 0.10
+    
     # --- KOMPONEN CPI (FOOD & SHELTER) ---
     elif "FOOD AT HOME" in title: return 0.2
     elif "CRB FOODSTUFFS" in title: return 2.0
+    elif "ZILLOW RENT" in title: return 0.5  # <--- Sigma Zillow YoY
+    elif "CPI SHELTER (MOM)" in title: return 0.1 # <--- Sigma CPI Shelter MoM
+    elif "CPI SHELTER (YOY)" in title: return 0.2 # <--- Sigma CPI Shelter YoY
     elif "CPI RENT" in title: return 0.1
     elif "CPI OER" in title: return 0.1
-    elif "CASE-SHILLER" in title: return 0.5
         
     # --- SUKU BUNGA & PERTUMBUHAN ---
     elif "FOMC" in title or "FEDERAL FUNDS" in title: 
