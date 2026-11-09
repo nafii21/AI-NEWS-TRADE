@@ -34,6 +34,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     3. ATURAN FILTER DOMAIN (SANGAT PENTING):
        - JIKA BERITA UTAMA ADALAH NFP: ABAIKAN total data Inflasi (CPI/PPI/PCE).
        - JIKA BERITA UTAMA ADALAH CPI: ABAIKAN total data Tenaga Kerja murni seperti NFP/ADP/JOLTs (Kecuali AHE, karena AHE adalah pemicu inflasi upah).
+       - JIKA BERITA UTAMA ADALAH CORE CPI: Fokus Inflasi Inti. ABAIKAN total Food (Makanan) & Energy (Minyak). Fokus HANYA pada AHE (Upah), Shelter (Rent & OER), dan Core PPI      
        - JIKA BERITA UTAMA ADALAH FOMC: Gunakan data Inflasi sebagai prioritas, lalu Tenaga Kerja sebagai konfirmasi.
     4. ATURAN KHUSUS CPI (KORELASI KOMPONEN):
        - UPAH / AHE: Ini adalah data Inflasi (Wage-Push), BUKAN tenaga kerja biasa. Jika AHE Actual > Forecast, upah naik -> inflasi jasa naik -> Hawkish (SELL Gold).
