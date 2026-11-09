@@ -21,6 +21,7 @@ def get_ai_decision(news_title, quant_context, market_context):
     {json.dumps(quant_context['supporting_analysis'], indent=2)}
     
     [3. KONDISI MARKET SAAT INI]
+    - Harga Gold Saat Ini: ${market_context['gold_price']:.2f}
     - Perubahan DXY hari ini: {market_context['dxy_change_pct']}%
     - Perubahan Harga Minyak: {market_context['oil_change_5d_pct']}%
     
@@ -29,22 +30,24 @@ def get_ai_decision(news_title, quant_context, market_context):
     2. CATATAN PENTING (LEADING INDICATORS LENGKAP): 
        Data Actual historis dari berita utama sengaja tidak dimasukkan karena sudah *priced in*. Fokus analisa kamu adalah membandingkan *Forecast* yang akan rilis besok dengan data *Leading Indicator* yang komprehensif sesuai jenis beritanya:
        - JIKA NFP: Fokus 100% pada data Tenaga Kerja (ADP Employment, ISM Manufacturing Employment, ISM Services Employment, JOLTs Job Openings, Challenger Job Cuts, Unemployment Rate, Average Hourly Earnings, Jobless Claims).
-       - JIKA CPI: Fokus 100% pada data Inflasi (PPI, Core PPI, Core PCE, AHE/Wage-Push, Shelter/Rent & OER, Food at Home, CRB Foodstuffs, Case-Shiller).
+       - JIKA CPI: Fokus 100% pada data Inflasi (PPI, Core PPI, Core PCE, AHE/Wage-Push, Zillow Rent Index, CPI Shelter, Rent & OER, Food at Home, CRB Foodstuffs).
        - JIKA FOMC: Fokus pada gabungan data Inflasi (CPI/PPI/PCE) sebagai prioritas utama, dan data Tenaga Kerja (NFP/ADP/Unemployment) sebagai konfirmasi.
     3. ATURAN FILTER DOMAIN (SANGAT PENTING):
        - JIKA BERITA UTAMA ADALAH NFP: ABAIKAN total data Inflasi (CPI/PPI/PCE).
        - JIKA BERITA UTAMA ADALAH CPI: ABAIKAN total data Tenaga Kerja murni seperti NFP/ADP/JOLTs (Kecuali AHE, karena AHE adalah pemicu inflasi upah).
-       - JIKA BERITA UTAMA ADALAH CORE CPI: Fokus Inflasi Inti. ABAIKAN total Food (Makanan) & Energy (Minyak). Fokus HANYA pada AHE (Upah), Shelter (Rent & OER), dan Core PPI      
+       - JIKA BERITA UTAMA ADALAH CORE CPI: Fokus Inflasi Inti. ABAIKAN total Food (Makanan) & Energy (Minyak). Fokus HANYA pada AHE (Upah), Shelter (Zillow, CPI Shelter, Rent & OER), dan Core PPI.
        - JIKA BERITA UTAMA ADALAH FOMC: Gunakan data Inflasi sebagai prioritas, lalu Tenaga Kerja sebagai konfirmasi.
     4. ATURAN KHUSUS CPI (KORELASI KOMPONEN):
        - UPAH / AHE: Ini adalah data Inflasi (Wage-Push), BUKAN tenaga kerja biasa. Jika AHE Actual > Forecast, upah naik -> inflasi jasa naik -> Hawkish (SELL Gold).
-       - SHELTER (Rent & OER): Menyumbang ~40% CPI. Jika Skor Positif, ada tekanan inflasi struktural (SELL Gold).
-       - FOOD (Food at Home & CRB): Menyumbang ~13% CPI. Jika naik, konfirmasi inflasi pangan memanas (SELL Gold).
-       - CASE-SHILLER: Leading indicator untuk Shelter. Jika turun, tekanan sewa reda (Dovish).
+       - SHELTER (~40% CPI): 
+         * Zillow Rent Index adalah *Leading Indicator* (alarm peringatan dini). Jika Zillow melandai/turun, ini pertanda inflasi sewa di masa depan akan mereda (Dovish).
+         * CPI Shelter, Rent & OER adalah data *real-time* resmi. Jika skornya Positif, ada tekanan inflasi struktural saat ini (Hawkish/SELL Gold).
+       - FOOD (Food at Home & CRB): Menyumbang ~13% CPI. Jika naik, konfirmasi inflasi pangan memanas.
     5. JANGAN MENJUMLAHKAN ATAU MERATA-RATA SKOR. Nilai data mana yang paling dominan untuk memprediksi apakah {news_title} besok akan mencapai {quant_context.get('main_forecast', 0.0)} atau tidak.
     6. KONTEKS MARKET: DXY naik = konfirmasi SELL. DXY turun = konfirmasi BUY. Minyak naik = Inflasi naik = SELL.
     7. CONFIDENCE: Berikan "High" HANYA JIKA semua data pendukung di domain tersebut searah. Jika campur aduk, WAJIB berikan "Medium".
-    
+    8. ATURAN ANTI-HALUSINASI HARGA: Dalam memberikan "trade_plan", kamu WAJIB menggunakan patokan Harga Gold Saat Ini (${market_context['gold_price']:.2f}). DILARANG menyebutkan harga di luar range $3000-$5000.
+
     Tugasmu:
     Tentukan arah XAUUSD dengan tegas (BUY/SELL) berdasarkan prediksi {news_title} besok dari data pendukung di atas.
     
@@ -55,8 +58,8 @@ def get_ai_decision(news_title, quant_context, market_context):
     {{
         "signal": "BUY / SELL",
         "confidence": "High / Medium / Low",
-        "math_explanation": "Jelaskan analisa kamu berdasarkan data pendukung yang relevan (misal: PPI, AHE, Shelter untuk CPI; atau ADP, JOLTs untuk NFP) untuk memprediksi {news_title} besok.",
-        "trade_plan": "Saran eksekusi trading untuk XAUUSD (Bahasa Indonesia)"
+        "math_explanation": "Jelaskan analisa kamu berdasarkan data pendukung yang relevan (misal: PPI, AHE, Shelter/Zillow untuk CPI; atau ADP, JOLTs untuk NFP) untuk memprediksi {news_title} besok.",
+        "trade_plan": "Saran eksekusi trading untuk XAUUSD (Bahasa Indonesia) dengan acuan Harga Gold Saat Ini (${market_context['gold_price']:.2f})."
     }}
     """
     
